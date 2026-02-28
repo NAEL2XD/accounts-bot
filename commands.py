@@ -73,7 +73,7 @@ SELF = {
 	"bomb": Command(
 		description="Bomb someone else `(@ping them)` or just yourself!",
 		asyncFunction=command_bomb,
-		cooldown=10
+		cooldown=1000
 	),
 	"achievements": Command(
 		description="Shows stats of all the achievements with detail and such.",
