@@ -1,0 +1,18 @@
+Fetches all the achievements that is available in this server and this bot.
+
+This will return every achievement that is implemented, with extra detail about how many people got it, the description, and if you got it or not.
+
+## Arguments:
+`.achievements`
+
+## Example Usage:
+```
+> .achievements
+>># ACHIEVEMENTS:
+>>
+>>Role 1: Description
+>>69% `69 / 100` of the users have this role.
+>>
+>>Role 2: Description
+>>10% 10 / 100 of the users have this role.
+```

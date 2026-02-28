@@ -1,0 +1,17 @@
+The help command is used for viewing detailed information on what the specified command does.
+
+Without specifying the command name, this will send a reply with every command with short details.
+
+If the user specified a command (for example: `.help help`), this will return the detailed information of this specified command.
+
+## Arguments:
+`.help (command name without .)`
+
+## Example Usage:
+```
+> .help
+>> This returns every command with details.
+
+> .help bomb
+>> This returns the absolute detail of the command .bomb
+```

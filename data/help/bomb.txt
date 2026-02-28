@@ -1,0 +1,17 @@
+Bombs a specified user, or just yourself. This will also increment the bombed counter for the specified user.
+
+If there isn't a mentioned user found in your message's contents, this will bomb yourself instead.
+
+If there is a mention user found in your message's contents, this will bomb the pinged user instead.
+
+## Arguments:
+`.bomb (mentioned username)`
+
+## Example Usage:
+```
+> .bomb
+>> <@you> get bombed you bozo :joy:, user got bombed <@you's bombed counter> times
+
+> .bomb @stranger
+>> <@stranger> get bombed you bozo :joy:, user got bombed <@stranger's bombed counter> times
+```
