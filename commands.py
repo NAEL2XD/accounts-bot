@@ -41,7 +41,7 @@ async def command_help(self:AccountBot, message:nextcord.Message):
 async def command_bomb(self:AccountBot, message:nextcord.Message):
 	# maybe it should be on its own command
 	s = message.content.split(" ", 1)
-	if len(s) > 1 and utils.listIsEq(s[1], ["lb", "leaderboard"]):
+	if len(s) > 1 and s[1] in ["lb", "leaderboard"]:
 		self.getDataFromMember(message.author).cmdTimestamp = 0 # reset the timestamp
 
 		sender = "## Bombed Rankings:\n"

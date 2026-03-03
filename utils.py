@@ -15,6 +15,3 @@ def formatToTimeAgo(num:float) -> str:
 			num = oldn
 
 	return output[:-2] if output else "0 seconds"
-
-def listIsEq(s:str, l:list[str]):
-	return any(s == x for x in l)

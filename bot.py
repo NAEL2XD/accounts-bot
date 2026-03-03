@@ -119,7 +119,7 @@ class AccountBot(nextcord.Client):
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
 		# it works but my god the code for this is so hideous.
 		def isVotingEmoji(e) -> bool:
-			return utils.listIsEq(str(e), ['⬆️', '⬇️'])
+			return str(e) in ['⬆️', '⬇️']
 
 		if not isVotingEmoji(m.emoji): # check if the emoji is what we want for CCC
 			return
@@ -132,7 +132,7 @@ class AccountBot(nextcord.Client):
 		if not mID or not isinstance(mID.channel, nextcord.TextChannel): # CCC
 			return
 
-		emojiDict = {str(emoji): emoji.count for emoji in mID.reactions if isVotingEmoji(emoji)}
+		emojiDict = {str(emoji): emoji.count - emoji.me for emoji in mID.reactions if isVotingEmoji(emoji)}
 		for emoji in ["⬆️", "⬇️"]: # fix a bug where if bot doesn't have a reaction it just throws keyerror
 			if emoji not in emojiDict:
 				await mID.add_reaction(emoji)
@@ -188,7 +188,7 @@ class AccountBot(nextcord.Client):
 
 			if firstAttachment and firstAttachment.content_type:
 				nameContent = firstAttachment.content_type.split("/", 1)[0].lower()
-				if utils.listIsEq(nameContent, ["image", "video", "audio"]):
+				if nameContent in ["image", "video", "audio"]:
 					await asyncio.sleep(1) # maybe wait a bit, for some reason it just doesn't give out the ⬆️ reaction and thinks the bot doesn't like that artwork
 					for emoji in ['⬆️', '⬇️']:
 						await message.add_reaction(emoji)
