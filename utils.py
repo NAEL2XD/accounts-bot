@@ -2,7 +2,7 @@ def formatToTimeAgo(num:float) -> str:
 	output = ""
 
 	for timer, fmt, mod in [
-		[60 * 60 * 24 * 7, "day", 31],
+		[60 * 60 * 24 * 7, "week", 31],
 		[60 * 60 * 24, "day", 7],
 		[60 * 60, "hour", 24],
 		[60, "minute", 60],
@@ -15,3 +15,6 @@ def formatToTimeAgo(num:float) -> str:
 			num = oldn
 
 	return output[:-2] if output else "0 seconds"
+
+def listIsEq(s:str, l:list[str]):
+	return any(s == x for x in l)

@@ -16,7 +16,7 @@ if __name__ == "__main__":
 Member = Union[nextcord.User, nextcord.Member]
 
 class UserData:
-	def __init__(self, data:dict = {}) -> None:
+	def __init__(self, data:dict = {}):
 		self.roleSave:list[int] = []
 		self.bombed:int = 0
 		self.cmdTimestamp:float = 0
@@ -54,7 +54,6 @@ class AccountBot(nextcord.Client):
 			activity=nextcord.Game(f"UPTIME: {utils.formatToTimeAgo(time.time() - self.LAST_ONLINE)}"),
 			status=nextcord.Status.idle
 		)
-		return
 
 	async def tryDM(self, message:str, member:Member):
 		try:
@@ -120,7 +119,7 @@ class AccountBot(nextcord.Client):
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
 		# it works but my god the code for this is so hideous.
 		def isVotingEmoji(e) -> bool:
-			return any(str(e) == emoji for emoji in ['⬆️', '⬇️'])
+			return utils.listIsEq(str(e), ['⬆️', '⬇️'])
 
 		if not isVotingEmoji(m.emoji): # check if the emoji is what we want for CCC
 			return
@@ -189,7 +188,7 @@ class AccountBot(nextcord.Client):
 
 			if firstAttachment and firstAttachment.content_type:
 				nameContent = firstAttachment.content_type.split("/", 1)[0].lower()
-				if any(nameContent == x for x in ["image", "video", "audio"]):
+				if utils.listIsEq(nameContent, ["image", "video", "audio"]):
 					await asyncio.sleep(1) # maybe wait a bit, for some reason it just doesn't give out the ⬆️ reaction and thinks the bot doesn't like that artwork
 					for emoji in ['⬆️', '⬇️']:
 						await message.add_reaction(emoji)
@@ -202,7 +201,8 @@ class AccountBot(nextcord.Client):
 				command = commands.SELF[cmd]
 				timeLeft = userData.cmdTimestamp - time.time() + command.cooldown
 				if timeLeft < 0:
-					userData.cmdTimestamp = time.time()
+					if not command.dontUpdateTimestamp:
+						userData.cmdTimestamp = time.time()
 					await command.asyncFunction(self=self, message=message)
 					self.outdatedSave = True
 				else:

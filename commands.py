@@ -1,16 +1,19 @@
 from bot import *
 import achievements
+import utils
 
 class Command:
 	def __init__(
 		self,
 		description:str,
 		asyncFunction,
-		cooldown:float = 0
+		cooldown:float = 0,
+		dontUpdateTimestamp:bool = False
 	) -> None:
-		self.description:str = description
+		self.description = description
 		self.asyncFunction = asyncFunction
-		self.cooldown:float = cooldown
+		self.cooldown = cooldown
+		self.dontUpdateTimestamp = dontUpdateTimestamp
 
 SELF:dict[str, Command] = {}
 
@@ -36,6 +39,22 @@ async def command_help(self:AccountBot, message:nextcord.Message):
 	await message.reply(toSend)
 
 async def command_bomb(self:AccountBot, message:nextcord.Message):
+	# maybe it should be on its own command
+	s = message.content.split(" ", 1)
+	if len(s) > 1 and utils.listIsEq(s[1], ["lb", "leaderboard"]):
+		self.getDataFromMember(message.author).cmdTimestamp = 0 # reset the timestamp
+
+		sender = "## Bombed Rankings:\n"
+		for rank, (userID, data) in enumerate(dict(sorted(self.USER_DATA.items(), key=lambda x: x[1].bombed, reverse=True)).items()): # wtf
+			if rank == 10:
+				break
+
+			user = self.get_user(userID)
+			if user:
+				sender += f"***{rank + 1}***. `{user.name}` with `{data.bombed}` bombs.\n"
+		await message.reply(sender)
+		return
+
 	targetUser = message.mentions[0] if message.mentions else message.author
 
 	targetID = self.getDataFromMember(targetUser)
@@ -68,7 +87,8 @@ async def command_achievements(self:AccountBot, message:nextcord.Message):
 SELF = {
 	"help": Command(
 		description="Shows the current Help Command.",
-		asyncFunction=command_help
+		asyncFunction=command_help,
+		dontUpdateTimestamp=True
 	),
 	"bomb": Command(
 		description="Bomb someone else `(@ping them)` or just yourself!",
@@ -77,6 +97,7 @@ SELF = {
 	),
 	"achievements": Command(
 		description="Shows stats of all the achievements with detail and such.",
-		asyncFunction=command_achievements
+		asyncFunction=command_achievements,
+		dontUpdateTimestamp=True
 	)
 }
