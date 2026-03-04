@@ -116,13 +116,9 @@ class AccountBot(nextcord.Client):
 		except RuntimeError:
 			pass
 
-		while True:
-			c = self.get_channel(1478775894054015026)
-			if not (c and isinstance(c, nextcord.TextChannel)):
-				break
-
+		c = self.get_channel(1478775894054015026)
+		if c and isinstance(c, nextcord.TextChannel):
 			await (await c.fetch_message(1478775894054015026)).edit(content=f"Running on Commit `{self.CUR_COMMIT}`")
-			break
 
 		if not self.LOGS_CHANNEL:
 			logChannel = self.get_channel(1179015275065131069)
