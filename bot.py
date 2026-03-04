@@ -5,7 +5,6 @@ import time
 import shutil
 import asyncio
 import nextcord
-import subprocess
 from typing import Union
 from nextcord.ext import tasks
 
@@ -65,8 +64,6 @@ class AccountBot(nextcord.Client):
 	@tasks.loop(minutes=10)
 	async def autoUpdate(self):
 		commit = utils.getCommit()
-		print(f"C: {commit} ({len(commit)})")
-		print(f"O: {self.CUR_COMMIT} ({len(self.CUR_COMMIT)})")
 		if any(commit.strip().lower() == x.strip().lower() for x in [self.CUR_COMMIT, ""]):
 			return
 
