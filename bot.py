@@ -60,6 +60,7 @@ class AccountBot(nextcord.Client):
 
 	# nice it works well, yea it ruins uptime but who the hell cares about it
 	# also me: HOLY FUCKING SHIT THIS BREAKS LIKE SO MANY TIMES
+	# also also me: why is the fix to make a shell script that restarts it
 	GIT_COMMIT_PENDING:bool = False
 	@tasks.loop(minutes=10)
 	async def autoUpdate(self):
@@ -79,7 +80,7 @@ class AccountBot(nextcord.Client):
 
 		shutil.rmtree(".tmp/.git")
 		shutil.copytree(".tmp", os.getcwd(), dirs_exist_ok=True)
-		shutil.rmtree(".tmp") #
+		shutil.rmtree(".tmp")
 
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)

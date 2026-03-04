@@ -3,6 +3,7 @@ main.py
 __pycache__
 
 # main files
+reset.sh
 data/users.json
 data/users.json.tmp
 data/commit.txt
