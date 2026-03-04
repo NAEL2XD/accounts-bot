@@ -90,7 +90,6 @@ class AccountBot(nextcord.Client):
 		self.CUR_COMMIT = commit
 		self.autoSave.cancel()
 		await self.autoSave()
-		await self.close()
 
 		os.execv("~/env/bin/python", ["python", "-B", "bot.py", sys.argv[1]]) # for my steam deck
 
