@@ -57,6 +57,7 @@ class AccountBot(nextcord.Client):
 			status=nextcord.Status.idle
 		)
 
+	# nice it works well, yea it ruins uptime but who the hell cares about it
 	GIT_COMMIT_PENDING:bool = False
 	@tasks.loop(minutes=10)
 	async def autoUpdate(self):
