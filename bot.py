@@ -48,6 +48,8 @@ class AccountBot(nextcord.Client):
 			tmpPath:str = f"{dataPath}.tmp"
 			with open(tmpPath, "w") as f:
 				json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
+				f.flush()
+				os.fsync(f.fileno())
 			os.replace(tmpPath, dataPath)
 			self.outdatedSave = False
 
