@@ -48,8 +48,6 @@ class AccountBot(nextcord.Client):
 			tmpPath:str = f"{dataPath}.tmp"
 			with open(tmpPath, "w") as f:
 				json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
-				f.flush()
-				os.fsync(f.fileno())
 			os.replace(tmpPath, dataPath)
 			self.outdatedSave = False
 
@@ -85,14 +83,12 @@ class AccountBot(nextcord.Client):
 
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)
-			f.flush()
-			os.fsync(f.fileno())
 
 		self.outdatedSave = True
 		self.autoSave.cancel()
 		await self.autoSave()
-
-		os.execv("~/env/bin/python", ["python", "bot.py", sys.argv[1]]) # for my steam deck
+		await asyncio.sleep(1)
+		os.execvp("~/env/bin/python", ["python", "bot.py", sys.argv[1]])
 
 	async def tryDM(self, message:str, member:Member):
 		try:
