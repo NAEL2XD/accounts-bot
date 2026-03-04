@@ -14,7 +14,7 @@ def formatToTimeAgo(num:float) -> str:
 			oldn = num
 			num = int(num / timer) % mod
 			if num != 0:
-				output += "%d %s%s, ".format(num, fmt, "s" if num != 1 else "")
+				output += f"{num} {fmt}{"s" if num != 1 else ""}, "
 			num = oldn
 
 	return output[:-2] if output else "0 seconds"
