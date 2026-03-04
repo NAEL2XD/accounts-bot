@@ -87,11 +87,10 @@ class AccountBot(nextcord.Client):
 			os.fsync(f.fileno())
 
 		self.outdatedSave = True
-		self.CUR_COMMIT = commit
 		self.autoSave.cancel()
 		await self.autoSave()
 
-		os.execv("~/env/bin/python", ["python", "-B", "bot.py", sys.argv[1]]) # for my steam deck
+		os.execv("~/env/bin/python", ["python", "bot.py", sys.argv[1]]) # for my steam deck
 
 	async def tryDM(self, message:str, member:Member):
 		try:
