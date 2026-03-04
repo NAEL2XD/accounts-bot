@@ -83,6 +83,8 @@ class AccountBot(nextcord.Client):
 
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)
+			f.flush()
+			os.fsync(f.fileno())
 
 		self.outdatedSave = True
 		self.CUR_COMMIT = commit
