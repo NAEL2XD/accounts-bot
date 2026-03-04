@@ -83,7 +83,7 @@ class AccountBot(nextcord.Client):
 		self.autoSave.cancel()
 		await self.autoSave()
 
-		os.execv(sys.executable, ["python", "run.py", sys.argv[1]])
+		os.execv(sys.executable, ["python", "bot.py", sys.argv[1]])
 
 	async def tryDM(self, message:str, member:Member):
 		try:
