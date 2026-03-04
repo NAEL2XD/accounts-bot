@@ -32,4 +32,4 @@ def getCommit() -> str:
 def emptyFile(file:str):
 	f = f"data/{file}"
 	if not os.path.exists(f):
-		open(f"data/{file}", "w").close() # same as doing this command: "touch data/{file}"
+		open(f, "w").close() # same as doing this command: "touch data/{file}"
