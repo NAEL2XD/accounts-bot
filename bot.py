@@ -5,6 +5,7 @@ import time
 import shutil
 import asyncio
 import nextcord
+import subprocess
 from typing import Union
 from nextcord.ext import tasks
 
@@ -88,7 +89,8 @@ class AccountBot(nextcord.Client):
 		self.autoSave.cancel()
 		await self.autoSave()
 		await self.close()
-		os.execv("~/env/bin/python", ["python", "bot.py", sys.argv[1]]) # for my steam deck
+
+		subprocess.Popen(["~/env/bin/python", "-B", "bot.py", sys.argv[1]])
 
 	async def tryDM(self, message:str, member:Member):
 		try:
