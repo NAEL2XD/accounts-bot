@@ -62,7 +62,7 @@ class AccountBot(nextcord.Client):
 	@tasks.loop(minutes=10)
 	async def autoUpdate(self):
 		commit = utils.getCommit()
-		if any(commit == x for x in [self.CUR_COMMIT, ""]):
+		if any(commit.strip().lower() == x.strip().lower() for x in [self.CUR_COMMIT, ""]):
 			return
 
 		self.GIT_COMMIT_PENDING = True
