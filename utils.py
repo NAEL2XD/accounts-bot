@@ -1,3 +1,6 @@
+import os
+import requests
+
 def formatToTimeAgo(num:float) -> str:
 	output = ""
 
@@ -15,3 +18,18 @@ def formatToTimeAgo(num:float) -> str:
 			num = oldn
 
 	return output[:-2] if output else "0 seconds"
+
+def getCommit() -> str:
+	r = requests.get("https://api.github.com/repos/NAEL2XD/accounts-bot/commits")
+
+	try:
+		r.raise_for_status()
+	except requests.HTTPError:
+		return ""
+
+	return r.json()[0]["sha"]
+
+def emptyFile(file:str):
+	f = f"data/{file}"
+	if not os.path.exists(f):
+		open(f"data/{file}", "w").close() # same as doing this command: "touch data/{file}"

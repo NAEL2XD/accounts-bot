@@ -1,3 +1,8 @@
 .secret
 main.py
 __pycache__
+
+# main files
+data/users.json
+data/users.json.tmp
+data/commit.txt

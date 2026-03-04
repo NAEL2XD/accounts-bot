@@ -1,9 +1,10 @@
 import os
+import sys
 import json
 import time
+import shutil
 import asyncio
 import nextcord
-from sys import argv
 from typing import Union
 from nextcord.ext import tasks
 
@@ -29,6 +30,7 @@ class AccountBot(nextcord.Client):
 	USER_DATA:dict[int, UserData] = {}
 	LOGS_CHANNEL:nextcord.TextChannel|None = None
 	LAST_ONLINE:float = 0
+	CUR_COMMIT:str = ""
 
 	# BOT UTILITIES
 	def getDataFromMember(self, member:Member) -> UserData:
@@ -55,6 +57,34 @@ class AccountBot(nextcord.Client):
 			status=nextcord.Status.idle
 		)
 
+	GIT_COMMIT_PENDING:bool = False
+	@tasks.loop(minutes=10)
+	async def autoUpdate(self):
+		commit = utils.getCommit()
+		if commit in [self.CUR_COMMIT, ""]:
+			return
+
+		self.GIT_COMMIT_PENDING = True
+		if os.path.exists("accounts-bot"):
+			shutil.rmtree("accounts-bot")
+
+		if os.system("git clone https://github.com/NAEL2XD/accounts-bot.git .tmp") != 0:
+			self.GIT_COMMIT_PENDING = False
+			return
+
+		shutil.rmtree(".tmp/.git")
+		shutil.copytree(".tmp", os.getcwd(), dirs_exist_ok=True)
+		shutil.rmtree(".tmp")
+
+		with open("data/commit.txt", "w") as f:
+			f.write(commit)
+
+		self.outdatedSave = True
+		self.autoSave.cancel()
+		await self.autoSave()
+
+		os.execv(sys.executable, ["python", "run.py", sys.argv[1]])
+
 	async def tryDM(self, message:str, member:Member):
 		try:
 			await member.send(message)
@@ -70,6 +100,10 @@ class AccountBot(nextcord.Client):
 			with open("data/users.json", "r") as f:
 				self.USER_DATA = {int(key): UserData(value) for key, value in dict(json.load(f)).items()}
 
+		utils.emptyFile("commit.txt")
+		with open("data/commit.txt", "r") as f:
+			self.CUR_COMMIT = f.read()
+
 	async def on_ready(self):
 		print(f'Logged on as {self.user}!')
 		self.LAST_ONLINE = time.time()
@@ -77,8 +111,17 @@ class AccountBot(nextcord.Client):
 		try:
 			self.autoSave.start()
 			self.autoSet.start()
+			self.autoUpdate.start()
 		except RuntimeError:
 			pass
+
+		while True:
+			c = self.get_channel(1478775894054015026)
+			if not (c and isinstance(c, nextcord.TextChannel)):
+				break
+
+			await (await c.fetch_message(1478775894054015026)).edit(content=f"Running on Commit `{self.CUR_COMMIT}`")
+			break
 
 		if not self.LOGS_CHANNEL:
 			logChannel = self.get_channel(1179015275065131069)
@@ -152,6 +195,9 @@ class AccountBot(nextcord.Client):
 			)
 
 	async def on_message(self, message:nextcord.Message):
+		if self.GIT_COMMIT_PENDING:
+			return
+
 		if message.author == self.user or not isinstance(message.channel, nextcord.TextChannel):
 			return
 		elif not message.guild and self.LOGS_CHANNEL: # not in account's folder but in a DM, so we send that to a channel
@@ -209,4 +255,4 @@ class AccountBot(nextcord.Client):
 					await message.reply(f"You are using this command way too quickly! Wait about `{round(timeLeft, 2)} seconds` to run this command again.")
 
 if __name__ == "__main__":
-	AccountBot(intents=nextcord.Intents.all()).run(argv[1])
+	AccountBot(intents=nextcord.Intents.all()).run(sys.argv[1])
