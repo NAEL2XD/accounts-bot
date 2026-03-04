@@ -79,7 +79,7 @@ class AccountBot(nextcord.Client):
 
 		shutil.rmtree(".tmp/.git")
 		shutil.copytree(".tmp", os.getcwd(), dirs_exist_ok=True)
-		shutil.rmtree(".tmp")
+		shutil.rmtree(".tmp") #
 
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)
