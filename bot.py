@@ -83,8 +83,7 @@ class AccountBot(nextcord.Client):
 		self.outdatedSave = True
 		self.autoSave.cancel()
 		await self.autoSave()
-
-		os.execv(sys.executable, ["python", "bot.py", sys.argv[1]])
+		os.execv("~/env/bin/python", ["python", "bot.py", sys.argv[1]]) # for my steam deck
 
 	async def tryDM(self, message:str, member:Member):
 		try:
@@ -116,7 +115,7 @@ class AccountBot(nextcord.Client):
 		except RuntimeError:
 			pass
 
-		c = self.get_channel(1478775894054015026)
+		c = self.get_channel(1477361864617885817)
 		if c and isinstance(c, nextcord.TextChannel):
 			await (await c.fetch_message(1478775894054015026)).edit(content=f"Running on Commit `{self.CUR_COMMIT}`")
 

@@ -1,6 +1,5 @@
 from bot import *
 import achievements
-import utils
 
 class Command:
 	def __init__(
