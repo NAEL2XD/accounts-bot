@@ -87,8 +87,11 @@ class AccountBot(nextcord.Client):
 		self.outdatedSave = True
 		self.autoSave.cancel()
 		await self.autoSave()
-		await asyncio.sleep(1)
-		os.execvp("~/env/bin/python", ["python", "bot.py", sys.argv[1]])
+
+		with open("restart.sh", "w") as f:
+			f.write(f'#!/bin/bash\nsleep 2\n~/env/bin/python bot.py "{sys.argv[1]}"')
+		os.chmod("restart.sh", 0o755)
+		os.execvp("/bin/bash", ["bash", "restart.sh"])
 
 	async def tryDM(self, message:str, member:Member):
 		try:
