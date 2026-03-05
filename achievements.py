@@ -15,7 +15,7 @@ SELF = {
 		roleID=1473009251399110687
 	),
 	"Bomber Enthusiastic": Achievements(
-		description="Get bombed over 50 times, exploded into oblivion.",
+		description="Get bombed over 5 times, exploded into oblivion.",
 		roleID=1475909457270804653
 	)
 }

@@ -1,5 +1,6 @@
 from bot import *
 import achievements
+import heapq
 
 class Command:
 	def __init__(
@@ -44,13 +45,10 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 		self.getDataFromMember(message.author).cmdTimestamp = 0 # reset the timestamp
 
 		sender = "## Bombed Rankings:\n"
-		for rank, (userID, data) in enumerate(dict(sorted(self.USER_DATA.items(), key=lambda x: x[1].bombed, reverse=True)).items()): # wtf
-			if rank == 10:
-				break
-
+		for rank, (userID, data) in enumerate(heapq.nlargest(10, self.USER_DATA.items(), key=lambda x: x[1].bombed)): # wtf
 			user = self.get_user(userID)
 			if user:
-				sender += f"***{rank + 1}***. `{user.name}` with `{data.bombed}` bombs.\n"
+				sender += f"{rank + 1}. **`{user.name}`** with *`{data.bombed}`* bomb count.\n"
 		await message.reply(sender)
 		return
 
@@ -58,7 +56,7 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 
 	targetID = self.getDataFromMember(targetUser)
 	targetID.bombed += 1
-	if targetID.bombed >= 50 and isinstance(targetUser, nextcord.Member):
+	if targetID.bombed >= 5 and isinstance(targetUser, nextcord.Member):
 		await achievements.unlock(self, targetUser, "Bomber Enthusiastic")
 
 	await message.channel.send(f"{targetUser.mention} get bombed you bozo :joy:, user got bombed {targetID.bombed} times")
