@@ -177,7 +177,7 @@ class AccountBot(nextcord.Client):
 		if not mID or not isinstance(mID.channel, nextcord.TextChannel): # CCC
 			return
 
-		emojiDict = {str(emoji): emoji.count - emoji.me for emoji in mID.reactions if isVotingEmoji(emoji)}
+		emojiDict = {str(emoji): emoji.count for emoji in mID.reactions if isVotingEmoji(emoji)}
 		for emoji in ["⬆️", "⬇️"]: # fix a bug where if bot doesn't have a reaction it just throws keyerror
 			if emoji not in emojiDict:
 				await mID.add_reaction(emoji)
