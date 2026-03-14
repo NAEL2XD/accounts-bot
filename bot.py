@@ -125,9 +125,7 @@ class AccountBot(nextcord.Client):
 
 		if not self.LOGS_CHANNEL:
 			logChannel = self.get_channel(1179015275065131069)
-			if not logChannel:
-				return
-			elif isinstance(logChannel, nextcord.TextChannel):
+			if logChannel and isinstance(logChannel, nextcord.TextChannel):
 				self.LOGS_CHANNEL = logChannel
 
 	async def on_member_join(self, member:nextcord.Member):
@@ -200,7 +198,7 @@ class AccountBot(nextcord.Client):
 
 		if message.author == self.user or not isinstance(message.channel, nextcord.TextChannel):
 			return
-		elif not message.guild and self.LOGS_CHANNEL: # not in account's folder but in a DM, so we send that to a channel
+		elif isinstance(message.channel, nextcord.DMChannel) and self.LOGS_CHANNEL: # not in account's folder but in a DM, so we send that to a channel
 			files = [await file.to_file() for file in message.attachments]
 			await self.LOGS_CHANNEL.send(f"{message.author.mention}: {message.content}", files=files)
 			return

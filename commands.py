@@ -56,7 +56,7 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 	targetUser = message.mentions[0] if message.mentions else message.author
 
 	increment = 1
-	while random.random() < 0.314: # pi day :)
+	while random.random() < 0.4:
 		increment += 1
 
 	targetID = self.getDataFromMember(targetUser)
