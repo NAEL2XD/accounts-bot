@@ -64,10 +64,10 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 	if targetID.bombed >= 5 and isinstance(targetUser, nextcord.Member):
 		await achievements.unlock(self, targetUser, "Bomber Enthusiastic")
 
-	sendMsg = f"{targetUser.mention} get bombed you bozo :joy:"
+	sendMsg = f"get bombed you bozo :joy:"
 	if increment > 1:
 		sendMsg = f"WOW! Mega BOMBED! user didn't explode not 1 but ***{increment} TIMES!*** {":joy:" * increment}"
-	await message.channel.send(f"{sendMsg}, user got bombed {targetID.bombed} times")
+	await message.channel.send(f"{targetUser.mention} {sendMsg}, user got bombed {targetID.bombed} times")
 
 async def command_achievements(self:AccountBot, message:nextcord.Message):
 	if not (message.guild and message.author and isinstance(message.author, nextcord.Member)):
@@ -98,7 +98,7 @@ SELF = {
 	"bomb": Command(
 		description="Bomb someone else `(@ping them)` or just yourself!",
 		asyncFunction=command_bomb,
-		cooldown=600 # 10 minutes
+		cooldown=60 # 1 minute
 	),
 	"achievements": Command(
 		description="Shows stats of all the achievements with detail and such.",
