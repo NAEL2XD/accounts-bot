@@ -1,6 +1,7 @@
 from bot import *
-import achievements
 import heapq
+import random
+import achievements
 
 class Command:
 	def __init__(
@@ -54,12 +55,19 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 
 	targetUser = message.mentions[0] if message.mentions else message.author
 
+	increment = 1
+	while random.random() < 0.314: # pi day :)
+		increment += 1
+
 	targetID = self.getDataFromMember(targetUser)
-	targetID.bombed += 1
+	targetID.bombed += increment
 	if targetID.bombed >= 5 and isinstance(targetUser, nextcord.Member):
 		await achievements.unlock(self, targetUser, "Bomber Enthusiastic")
 
-	await message.channel.send(f"{targetUser.mention} get bombed you bozo :joy:, user got bombed {targetID.bombed} times")
+	sendMsg = f"{targetUser.mention} get bombed you bozo :joy:"
+	if increment > 1:
+		sendMsg = f"WOW! Mega BOMBED! user didn't explode not 1 but ***{increment} TIMES!*** {":joy:" * increment}"
+	await message.channel.send(f"{sendMsg}, user got bombed {targetID.bombed} times")
 
 async def command_achievements(self:AccountBot, message:nextcord.Message):
 	if not (message.guild and message.author and isinstance(message.author, nextcord.Member)):
@@ -74,9 +82,9 @@ async def command_achievements(self:AccountBot, message:nextcord.Message):
 
 		totalWithRole = len(role.members)
 		if members:
-			sender += "`{}`: {}{}\n{}\n\n".format(
+			sender += "`{}`: {}{}\n-# **{}** of the users have this role.\n\n".format(
 				name, data.description, " - ***You already have this role!***" if role in message.author.roles else "",
-				f"-# **{round((totalWithRole / members) * 100, 2)}% `{totalWithRole} / {members}`** of the users have this role."
+				f"{round((totalWithRole / members) * 100, 2)}% `{totalWithRole} / {members}`"
 			)
 
 	await message.reply(sender)

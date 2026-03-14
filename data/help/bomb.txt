@@ -20,3 +20,5 @@ If you want to view the leaderboard, you'll need to send this command: `.bomb [l
 > .bomb lb
 >> [leaderboard goes here]
 ```
+
+-# There's a 31.4% chance everytime to increase explosion.

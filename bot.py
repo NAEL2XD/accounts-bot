@@ -29,8 +29,8 @@ class UserData:
 class AccountBot(nextcord.Client):
 	USER_DATA:dict[int, UserData] = {}
 	LOGS_CHANNEL:nextcord.TextChannel|None = None
-	LAST_ONLINE:float = 0
-	CUR_COMMIT:str = ""
+	LAST_ONLINE = 0.0
+	CUR_COMMIT = ""
 
 	# BOT UTILITIES
 	def getDataFromMember(self, member:Member) -> UserData:
@@ -58,10 +58,8 @@ class AccountBot(nextcord.Client):
 		)
 
 	# nice it works well, yea it ruins uptime but who the hell cares about it
-	# also me: HOLY FUCKING SHIT THIS BREAKS LIKE SO MANY TIMES
-	# also also me: why is the fix to make a shell script that restarts it
 	GIT_COMMIT_PENDING:bool = False
-	@tasks.loop(minutes=10)
+	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
 		commit = utils.getCommit()
 		if any(commit.strip().lower() == x.strip().lower() for x in [self.CUR_COMMIT, ""]):
