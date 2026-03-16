@@ -33,3 +33,6 @@ def emptyFile(file:str):
 	f = f"data/{file}"
 	if not os.path.exists(f):
 		open(f, "w").close() # same as doing this command: "touch data/{file}"
+
+def isVotingEmoji(e) -> bool:
+	return str(e) in ['⬆️', '⬇️']

@@ -89,6 +89,62 @@ async def command_achievements(self:AccountBot, message:nextcord.Message):
 
 	await message.reply(sender)
 
+async def command_cmStats(self:AccountBot, message:nextcord.Message):
+	targetID = self.getDataFromMember(message.author)
+	if not targetID.communityReactions:
+		await message.reply("You haven't gotten any stats on #COMMUNITY, try getting someone to vote you.")
+
+	page = 1
+	split = message.content.split(" ", 2)
+	if len(split) > 1 and split[1].isdigit():
+		page = int(split[1])
+
+	if page < 1:
+		await message.reply("Going out of bounds, aren't you?")
+
+	m = await message.channel.send("Please wait, this may take a while...")
+
+	sender = f"## Viewing Page {page} of {int(len(targetID.communityReactions) / 5) + 1}\n"
+	offset = 0
+	finallyProcessed = False
+	for i, (messageID, communityID) in enumerate(heapq.nlargest((page + 1) * 5, targetID.communityReactions.items(), key=lambda x: x[0])):
+		if i - offset < (page - 1) * 5:
+			continue
+
+		channel = self.get_channel(communityID)
+		if not (channel and isinstance(channel, nextcord.TextChannel)):
+			continue
+
+		cm:nextcord.Message
+		try:
+			cm = await channel.fetch_message(messageID)
+		except nextcord.NotFound:
+			offset += 1
+			continue
+		finallyProcessed = True
+		emojiDict = {str(emoji): emoji.count for emoji in cm.reactions if utils.isVotingEmoji(emoji)}
+		total = emojiDict.get("⬆️", 0) - emojiDict.get("⬇️", 0)
+
+		emoji = "⬆️"
+		if total > 9:
+			emoji = "⭐"
+		elif total == 0:
+			emoji = "❓"
+		elif total < -9:
+			emoji = "😂"
+		elif total < 0:
+			emoji = "⬇️"
+
+		sender += f"{i+1}. `{emoji} {total}` - [This Post.]({cm.jump_url})\n"
+
+	if not finallyProcessed:
+		sender += "Yeah right, what were you trying to see in a page that does not exist exactly?"
+	elif offset != 0:
+		sender += f"-# {offset} of your message(s) were not found and was skipped."
+
+	await m.delete()
+	await message.reply(sender)
+
 SELF = {
 	"help": Command(
 		description="Shows the current Help Command.",
@@ -103,6 +159,11 @@ SELF = {
 	"achievements": Command(
 		description="Shows stats of all the achievements with detail and such.",
 		asyncFunction=command_achievements,
+		dontUpdateTimestamp=True
+	),
+	"cmStats": Command(
+		description="Fetches your current stats from #COMMUNITY posted artwork.",
+		asyncFunction=command_cmStats,
 		dontUpdateTimestamp=True
 	)
 }

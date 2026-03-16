@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import time
+import utils
 import shutil
 import asyncio
 import nextcord
@@ -12,7 +13,6 @@ if __name__ == "__main__":
 	# circular import fix
 	import commands
 	import achievements
-	import utils
 
 Member = Union[nextcord.User, nextcord.Member]
 
@@ -21,6 +21,7 @@ class UserData:
 		self.roleSave:list[int] = []
 		self.bombed:int = 0
 		self.cmdTimestamp:float = 0
+		self.communityReactions:dict[int, int] = {} # {messageid, channelid}
 
 		for key in self.__dict__.keys():
 			if key in data and isinstance(data[key], type(self.__dict__[key])):
@@ -61,6 +62,9 @@ class AccountBot(nextcord.Client):
 	GIT_COMMIT_PENDING:bool = False
 	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
+		if os.getenv("D_TESTING") == "1": # special flag
+			return
+
 		commit = utils.getCommit()
 		if any(commit.strip().lower() == x.strip().lower() for x in [self.CUR_COMMIT, ""]):
 			return
@@ -158,26 +162,25 @@ class AccountBot(nextcord.Client):
 		self.outdatedSave = True
 
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
-		# it works but my god the code for this is so hideous.
-		def isVotingEmoji(e) -> bool:
-			return str(e) in ['⬆️', '⬇️']
-
-		if not isVotingEmoji(m.emoji): # check if the emoji is what we want for CCC
+		if not utils.isVotingEmoji(m.emoji): # check if the emoji is what we want for CCC
 			return
 
 		cID = self.get_channel(m.channel_id)
 		if not cID or not isinstance(cID, nextcord.TextChannel) or not cID.category_id or cID.category_id != 1208732034340487208:
 			return # This shouldn't happen, it always exist and has all the metadata stuff
 
-		mID = await cID.get_partial_message(m.message_id).fetch()
+		mID = await cID.fetch_message(m.message_id)
 		if not mID or not isinstance(mID.channel, nextcord.TextChannel): # CCC
 			return
 
-		emojiDict = {str(emoji): emoji.count for emoji in mID.reactions if isVotingEmoji(emoji)}
+		emojiDict = {str(emoji): emoji.count for emoji in mID.reactions if utils.isVotingEmoji(emoji)}
 		for emoji in ["⬆️", "⬇️"]: # fix a bug where if bot doesn't have a reaction it just throws keyerror
 			if emoji not in emojiDict:
 				await mID.add_reaction(emoji)
 				emojiDict[emoji] = 1
+
+		t = self.getDataFromMember(mID.author)
+		t.communityReactions[mID.id] = mID.channel.id
 
 		if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] == 1:
 			author = mID.author
