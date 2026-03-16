@@ -93,6 +93,7 @@ async def command_cmStats(self:AccountBot, message:nextcord.Message):
 	targetID = self.getDataFromMember(message.author)
 	if not targetID.communityReactions:
 		await message.reply("You haven't gotten any stats on #COMMUNITY, try getting someone to vote you.")
+		return
 
 	page = 1
 	split = message.content.split(" ", 2)
@@ -101,6 +102,7 @@ async def command_cmStats(self:AccountBot, message:nextcord.Message):
 
 	if page < 1:
 		await message.reply("Going out of bounds, aren't you?")
+		return
 
 	m = await message.channel.send("Please wait, this may take a while...")
 
