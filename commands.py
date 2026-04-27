@@ -62,7 +62,7 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 
 	sendMsg = f"get bombed you bozo :joy:"
 	if increment > 1:
-		sendMsg = f"WOW! Mega BOMBED! user didn't explode not 1 but ***{increment} TIMES!*** {":joy:" * increment}"
+		sendMsg = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {":joy:" * increment}"
 	await message.channel.send(f"{targetUser.mention} {sendMsg}, user got bombed {targetID.bombed} times")
 
 	if targetID.bombed >= 5 and isinstance(targetUser, nextcord.Member):
