@@ -7,3 +7,6 @@ reset.sh
 data/users.json
 data/users.json.tmp
 data/commit.txt
+
+# misc
+out.txt

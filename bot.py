@@ -3,7 +3,6 @@ import sys
 import json
 import time
 import utils
-import shutil
 import asyncio
 import nextcord
 from typing import Union
