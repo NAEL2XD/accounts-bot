@@ -213,15 +213,13 @@ class AccountBot(nextcord.Client):
 			firstAttachment:nextcord.Attachment
 			if message.attachments:
 				firstAttachment = message.attachments[0]
-
-			ss = message.snapshots[0].attachments # forwarded message (which is called a snapshot, i guess)
-			if not firstAttachment and message.snapshots and ss:
-				firstAttachment = ss[0]
+			elif message.snapshots and message.snapshots[0].attachments:
+				firstAttachment = message.snapshots[0].attachments[0]
 
 			if firstAttachment and firstAttachment.content_type:
 				nameContent = firstAttachment.content_type.split("/", 1)[0].lower()
 				if nameContent in ["image", "video", "audio"]:
-					await asyncio.sleep(0.5) # maybe wait a bit, for some reason it just doesn't give out the ⬆️ reaction and thinks the bot doesn't like that artwork
+					await asyncio.sleep(0.25) # maybe wait a bit, for some reason it just doesn't give out the ⬆️ reaction and thinks the bot doesn't like that artwork
 					for emoji in ['⬆️', '⬇️']:
 						await message.add_reaction(emoji)
 			return
