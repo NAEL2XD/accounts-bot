@@ -27,9 +27,9 @@ def getCommit() -> str:
 	except requests.HTTPError:
 		return ""
 
-	return r.json()[0]["sha"]
+	return str(r.json()[0]["sha"]).strip().lower()
 
-def emptyFile(file:str):
+def touch(file:str):
 	f = f"data/{file}"
 	if not os.path.exists(f):
 		open(f, "w").close() # same as doing this command: "touch data/{file}"

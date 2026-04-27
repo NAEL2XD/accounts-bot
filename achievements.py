@@ -9,7 +9,7 @@ class Achievements:
 		self.description = description
 		self.roleID = roleID
 
-SELF = {
+ROLES = {
 	"Everyone Loves It": Achievements(
 		description="Get 10 ⬆️ without someone ⬇️ing your post in #COMMUNITY",
 		roleID=1473009251399110687
@@ -24,8 +24,8 @@ async def unlock(self:AccountBot, user:nextcord.Member, achievement:str, customS
 	if not customString:
 		customString = f"Congratulations, You have gotten a new achievement: `{achievement}`\n\nYour role should be added in your profile, Hope you have fun!"
 
-	if achievement in SELF:
-		rID = SELF[achievement].roleID
+	if achievement in ROLES:
+		rID = ROLES[achievement].roleID
 		role = user.guild.get_role(rID)
 		if not user.get_role(rID) and role:
 			await user.add_roles(role)
