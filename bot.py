@@ -67,23 +67,28 @@ class AccountBot(nextcord.Client):
 			return
 
 		self.GIT_COMMIT_PENDING = True
-		with open("data/commit.txt", "w") as f:
-			f.write(commit)
-
-		if os.path.exists(".tmp"):
-			os.chdir(".tmp")
-			os.system("git pull origin main")
-			os.chdir("..")
-		else:
-			os.system("git clone https://github.com/NAEL2XD/accounts-bot.git .tmp")
-		shutil.copytree(".tmp", os.getcwd(), dirs_exist_ok=True)
-
 		self.SAVE_OUTDATED = True
 		self.autoSave.cancel()
 		await self.autoSave()
 
+		with open("data/commit.txt", "w") as f:
+			f.write(commit)
+
 		with open("restart.sh", "w") as f:
-			f.write(f'#!/bin/bash\nsleep 2\n~/env/bin/python bot.py "{sys.argv[1]}"')
+			f.write("\n".join([
+				'#!/bin/bash',
+				'if [ -d ".tmp" ]; then',
+				'	cd .tmp',
+				'	git pull origin main',
+				'	cd ..',
+				'else',
+				'	git clone https://github.com/NAEL2XD/accounts-bot.git .tmp',
+				'fi',
+				'cp -rf ./.tmp/. .',
+				'echo wait for start...',
+				'sleep 2',
+				f'~/env/bin/python bot.py "{sys.argv[1]}"'
+			]))
 
 		os.chmod("restart.sh", 0o755)
 		os.execvp("/bin/bash", ["bash", "restart.sh"])
