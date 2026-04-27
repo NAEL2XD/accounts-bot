@@ -9,12 +9,10 @@ class Command:
 		description:str,
 		asyncFunction,
 		cooldown:float = 0,
-		updateTimestamp:bool = False
 	) -> None:
 		self.description = description
 		self.asyncFunction = asyncFunction
 		self.cooldown = cooldown
-		self.updateTimestamp = updateTimestamp
 
 CMDS:dict[str, Command] = {}
 
@@ -90,8 +88,7 @@ async def command_achievements(self:AccountBot, message:nextcord.Message):
 CMDS = {
 	"help": Command(
 		description="Shows the current Help Command.",
-		asyncFunction=command_help,
-		updateTimestamp=True
+		asyncFunction=command_help
 	),
 	"bomb": Command(
 		description="Bomb someone else `(@ping them)` or just yourself!",
@@ -100,7 +97,6 @@ CMDS = {
 	),
 	"achievements": Command(
 		description="Shows stats of all the achievements with detail and such.",
-		asyncFunction=command_achievements,
-		updateTimestamp=True
+		asyncFunction=command_achievements
 	)
 }

@@ -231,7 +231,7 @@ class AccountBot(nextcord.Client):
 				command = commands.CMDS[cmd]
 				timeLeft = userData.cmdTimestamp - time.time() + command.cooldown
 				if timeLeft < 0:
-					if command.updateTimestamp:
+					if command.cooldown != 0:
 						userData.cmdTimestamp = time.time()
 					await command.asyncFunction(self=self, message=message)
 					return
