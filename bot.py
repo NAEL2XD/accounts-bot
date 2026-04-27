@@ -213,7 +213,7 @@ class AccountBot(nextcord.Client):
 			firstAttachment:nextcord.Attachment
 			if message.attachments:
 				firstAttachment = message.attachments[0]
-			elif message.snapshots and message.snapshots[0].attachments:
+			elif message.snapshots and message.snapshots and message.snapshots[0].attachments:
 				firstAttachment = message.snapshots[0].attachments[0]
 
 			if firstAttachment and firstAttachment.content_type:
