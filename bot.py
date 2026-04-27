@@ -58,8 +58,6 @@ class AccountBot(nextcord.Client):
 			status=nextcord.Status.do_not_disturb
 		)
 
-	# nice it works well
-	# yea it ruins uptime but who the hell cares about it
 	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
 		commit = utils.getCommit()
@@ -74,6 +72,7 @@ class AccountBot(nextcord.Client):
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)
 
+		# yes its stupid but it works
 		with open("restart.sh", "w") as f:
 			f.write("\n".join([
 				'#!/bin/bash',
