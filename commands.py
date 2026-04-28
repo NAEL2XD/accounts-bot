@@ -17,14 +17,14 @@ class Command:
 CMDS:dict[str, Command] = {}
 
 async def command_help(self:AccountBot, message:nextcord.Message):
-	targetCommand = message.content[1:].split(" ", 2)
-	if len(targetCommand) >= 2:
-		cmd = targetCommand[1]
+	command = message.content[1:].split(" ", 2)
+	if len(command) >= 2:
+		cmd = command[1]
 		if cmd in CMDS:
 			with open(f"data/help/{cmd}.txt", "r") as f:
 				await message.reply(f"# Detailed Help about the command `.{cmd}`:\n\n{f.read()}")
 		else:
-			await message.reply(f"Command `{cmd}` was not found in the database.")
+			await message.reply(f"Command `{cmd}` was not found in the files.")
 		return
 
 	toSend = "## Help Commands:\n"
@@ -34,8 +34,7 @@ async def command_help(self:AccountBot, message:nextcord.Message):
 			commandData.description,
 			f" - ***This Command has a Cooldown of {commandData.cooldown} seconds***" if commandData.cooldown != 0 else ""
 		)
-	toSend += f"\n-# Tip: For a detailed explanation, type `.help (command)`."
-	await message.reply(toSend)
+	await message.reply(f"{toSend}\n-# Tip: For a detailed explanation, type `.help (command)`.")
 
 async def command_bomb(self:AccountBot, message:nextcord.Message):
 	# maybe it should be on its own command
@@ -62,8 +61,8 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 	sendMsg = "get bombed you bozo :joy:"
 	if increment > 1:
 		sendMsg = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {":joy:" * increment}"
-	await message.channel.send(f"{targetUser.mention} {sendMsg}, user got bombed {targetID.bombed} times")
 
+	await message.channel.send(f"{targetUser.mention} {sendMsg}, user got bombed {targetID.bombed} times")
 	if targetID.bombed >= 5 and isinstance(targetUser, nextcord.Member):
 		await achievements.unlock(self, targetUser, "Bomber Enthusiastic")
 

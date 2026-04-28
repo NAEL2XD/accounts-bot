@@ -1,6 +1,6 @@
 from bot import *
 
-class Achievements:
+class Achievement:
 	def __init__(
 		self,
 		description:str,
@@ -10,13 +10,13 @@ class Achievements:
 		self.roleID = roleID
 
 ROLES = {
-	"Everyone Loves It": Achievements(
+	"Everyone Loves It": Achievement(
 		description="Get 10 ⬆️ without someone ⬇️ing your post in #COMMUNITY",
-		roleID=1473009251399110687
+		roleID=consts.ELI_ROLE
 	),
-	"Bomber Enthusiastic": Achievements(
+	"Bomber Enthusiastic": Achievement(
 		description="Get bombed over 5 times, exploded into oblivion.",
-		roleID=1475909457270804653
+		roleID=consts.BE_ROLE
 	)
 }
 

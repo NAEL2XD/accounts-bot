@@ -3,7 +3,9 @@ import sys
 import json
 import time
 import utils
+import consts
 import asyncio
+import aiohttp
 import nextcord
 import traceback
 from typing import Union
@@ -35,9 +37,9 @@ class AccountBot(nextcord.Client):
 
 	# BOT UTILITIES
 	def getDataFromMember(self, member:Member) -> UserData:
+		self.SAVE_OUTDATED = True
 		if member.id not in self.USER_DATA:
 			self.USER_DATA[member.id] = UserData()
-		self.SAVE_OUTDATED = True
 		return self.USER_DATA[member.id]
 
 	@tasks.loop(minutes=10)
@@ -59,7 +61,15 @@ class AccountBot(nextcord.Client):
 
 	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
-		commit = utils.getCommit()
+		commit = ""
+		async with aiohttp.ClientSession() as session:
+			async with session.get(consts.REPO_COMMIT_API) as r:
+				try:
+					r.raise_for_status()
+				except aiohttp.ClientResponseError:
+					return ""
+				commit = str((await r.json())[0]["sha"]).strip().lower()
+
 		if commit in [self.CUR_COMMIT, ""]:
 			return
 
@@ -121,28 +131,27 @@ class AccountBot(nextcord.Client):
 		except RuntimeError:
 			pass
 
-		channel = self.get_guild(1036051546284249139)
-		if channel:
-			logs = channel.get_channel(1179015275065131069)
+		guild = self.get_guild(consts.GUILD_ID)
+		if guild:
+			logs = guild.get_channel(consts.LOGS_ID)
 			if logs and isinstance(logs, nextcord.TextChannel):
 				self.LOGS_CHANNEL = logs
 
 	async def on_member_join(self, member:nextcord.Member):
-		fourteenDays = 60 * 60 * 24 * 14
-		ageInSeconds = time.time() - member.created_at.timestamp()
-		if ageInSeconds < fourteenDays: # 2 weeks
-			formattedDays = round(ageInSeconds / 86400, 1)
+		age = time.time() - member.created_at.timestamp()
+		if age < consts.FOURTEEN_DAYS:
+			days = round(age / 86400, 1)
+			await member.kick(reason=f"Not old enough to join this server ({days} days old)")
 			await self.tryDM(
 				f"Hey {member.name}, thanks for joining Account's Folder\n\n"
-				"You're seeing this DM because your account is not old enough to join Account's Folder\n\n"
-				f"Your account's creation is `{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}` (`{formattedDays} days`), "
+				"You're seeing this DM because your account is **NOT** old enough to join Account's Folder\n\n"
+				f"Your account's creation is `{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}` (`{days} days`), "
 				"while Account's Folder requires all users to be more than 14 days old.\n\n"
-				f"Wait about `{round((fourteenDays - ageInSeconds) / 86400, 1)} days` to be able to access this server again!\n\n"
+				f"Wait about `{round((consts.FOURTEEN_DAYS - age) / 86400, 1)} days` to be able to access this server again!\n\n"
 				"-# p.s. If that time is up, you can rejoin this server (https://discord.gg/dsRUP9MAxY)\n"
 				"-# Oh and DON'T FLOOD OUR LOGS!!!",
 				member
 			)
-			await member.kick(reason=f"Not old enough to join this server ({formattedDays} days old)")
 			return
 
 		for roleID in self.getDataFromMember(member).roleSave:
@@ -158,28 +167,27 @@ class AccountBot(nextcord.Client):
 
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
 		cID = self.get_channel(m.channel_id)
-		if not cID or not isinstance(cID, nextcord.TextChannel) or not cID.category_id or cID.category_id != 1208732034340487208:
-			return # This shouldn't happen, it always exist and has all the metadata stuff
+		if not cID or not isinstance(cID, nextcord.TextChannel) or not cID.category_id or cID.category_id != consts.COMMUNITY_ID:
+			return # This shouldn't happen
 
 		mID = await cID.fetch_message(m.message_id)
 		if not mID or not isinstance(mID.channel, nextcord.TextChannel): # CCC
 			return
 
-		emojiDict = {str(emoji): emoji.count for emoji in mID.reactions if utils.isVotingEmoji(emoji) and emoji.me}
-		for emoji in ["⬆️", "⬇️"]: # fix a bug where if bot doesn't have a reaction it just throws keyerror
+		emojiDict = {str(emoji): emoji.count for emoji in mID.reactions if str(emoji) in ['⬆️', '⬇️'] and emoji.me}
+		for emoji in ["⬆️", "⬇️"]: # KeyError goes bye.
 			if emoji not in emojiDict:
 				await mID.add_reaction(emoji)
 				emojiDict[emoji] = 1
 
-		if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] == 1:
-			if isinstance(mID.author, nextcord.Member):
-				await achievements.unlock(
-					self, mID.author, "Everyone Loves It", 
-					"# Congratulations!!\n\n"
-					f"Your [post]({mID.jump_url}) there was a massive success!\n\n"
-					"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
-					"Check your profile, it should be there now, and have fun with your new role!"
-				)
+		if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1 and isinstance(mID.author, nextcord.Member):
+			await achievements.unlock(
+				self, mID.author, "Everyone Loves It", 
+				"# Congratulations!!\n\n"
+				f"Your [post]({mID.jump_url}) there was a massive success!\n\n"
+				"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
+				"Check your profile, it should be there now, and have fun with your new role!"
+			)
 
 	async def on_message(self, message:nextcord.Message):
 		isSelf = message.author == self.user
@@ -190,15 +198,15 @@ class AccountBot(nextcord.Client):
 		userData = self.getDataFromMember(message.author)
 
 		# Honeypot
-		if message.channel.id == 1411421102558810223 and isinstance(message.author, nextcord.Member):
+		if message.channel.id == consts.HONEYPOT_ID and isinstance(message.author, nextcord.Member):
 			userData.roleSave = [role.id for role in message.author.roles]
 			await message.author.kick(reason="User intentionally got hacked, or actually just got hacked!! Should have changed your Password.")
 			await self.tryDM(
 				"## You've been HACKED!!\n\n"
 				"Either you got this by getting yourself (intentionally) hacked or just too curious to go to a channel that's for a honeypot.\n\n"
-				"If you *did* get hacked, CHANGE your password, ADD 2 Factor Authentification, "
-				"UNAUTHORIZE anything suspicious in your account (`User Settings > Devices | Authorised Apps`)\n\n"
-				"If you took all actions (or just became too curious), then you can join back this server: https://discord.gg/dsRUP9MAxY\n\n"
+				"If you *did* get hacked? CHANGE your password, ADD 2 Factor Authentification, "
+				"UNAUTHORIZE anything suspicious in your account (`User Settings > Devices & Authorised Apps`)\n\n"
+				"If you took all actions (or just became too curious), then you can join back this server @ https://discord.gg/dsRUP9MAxY\n\n"
 				"-# Oh and no, you're not banned.",
 				message.author
 			)
@@ -207,7 +215,7 @@ class AccountBot(nextcord.Client):
 
 		# Community Channel Checks
 		if (message.attachments or message.snapshots) and \
-			message.channel.category and isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id == 1208732034340487208:
+			message.channel.category and isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id == consts.COMMUNITY_ID:
 			media:nextcord.Attachment
 			if message.attachments:
 				media = message.attachments[0]
@@ -240,6 +248,7 @@ class AccountBot(nextcord.Client):
 		user = self.get_user(786639413282209802)
 		if user:
 			await user.send(f"New Exception Occurred!\nReason: `{error}`", file=nextcord.File("data/exception.txt", "exception.txt"))
+		os.remove("data/exception.txt")
 
 if __name__ == "__main__":
 	AccountBot(intents=nextcord.Intents.all()).run(sys.argv[1])
