@@ -185,8 +185,7 @@ class AccountBot(nextcord.Client):
 		isSelf = message.author == self.user
 		if isSelf or not isinstance(message.channel, nextcord.TextChannel):
 			if isinstance(message.channel, nextcord.DMChannel) and self.LOGS_CHANNEL and not isSelf: # not in account's folder but in a DM, so we send that to a channel
-				await self.LOGS_CHANNEL.send(f"From: {message.author.mention}:")
-				await message.forward(self.LOGS_CHANNEL)
+				await (await message.forward(self.LOGS_CHANNEL)).reply(f"From: {message.author.mention}:")
 			return
 		userData = self.getDataFromMember(message.author)
 
