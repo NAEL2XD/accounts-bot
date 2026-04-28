@@ -4,6 +4,7 @@ __pycache__
 
 # main files
 reset.sh
+data/exception.txt
 data/users.json
 data/users.json.tmp
 data/commit.txt

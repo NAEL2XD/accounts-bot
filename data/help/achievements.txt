@@ -1,4 +1,4 @@
-Fetches all the achievements that is available in this server and this bot.
+Fetches all the achievements that are available in this server and this bot.
 
 This will return every achievement that is implemented, with extra detail about how many people got it, the description, and if you got it or not.
 

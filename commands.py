@@ -51,16 +51,15 @@ async def command_bomb(self:AccountBot, message:nextcord.Message):
 		await message.reply(sender)
 		return
 
-	targetUser = message.mentions[0] if message.mentions else message.author
-
 	increment = 1
 	while random.random() < 0.5:
 		increment += 1
 
+	targetUser = message.mentions[0] if message.mentions else message.author
 	targetID = self.getDataFromMember(targetUser)
 	targetID.bombed += increment
 
-	sendMsg = f"get bombed you bozo :joy:"
+	sendMsg = "get bombed you bozo :joy:"
 	if increment > 1:
 		sendMsg = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {":joy:" * increment}"
 	await message.channel.send(f"{targetUser.mention} {sendMsg}, user got bombed {targetID.bombed} times")

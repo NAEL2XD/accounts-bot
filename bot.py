@@ -5,6 +5,7 @@ import time
 import utils
 import asyncio
 import nextcord
+import traceback
 from typing import Union
 from nextcord.ext import tasks
 
@@ -28,7 +29,6 @@ class UserData:
 class AccountBot(nextcord.Client):
 	USER_DATA:dict[int, UserData] = {}
 	LOGS_CHANNEL:nextcord.TextChannel|None = None
-	GIT_COMMIT_PENDING = False
 	SAVE_OUTDATED = False
 	LAST_ONLINE = 0.0
 	CUR_COMMIT = ""
@@ -60,10 +60,9 @@ class AccountBot(nextcord.Client):
 	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
 		commit = utils.getCommit()
-		if any(commit == x for x in [self.CUR_COMMIT, ""]):
+		if commit in [self.CUR_COMMIT, ""]:
 			return
 
-		self.GIT_COMMIT_PENDING = True
 		self.SAVE_OUTDATED = True
 		self.autoSave.cancel()
 		await self.autoSave()
@@ -122,14 +121,11 @@ class AccountBot(nextcord.Client):
 		except RuntimeError:
 			pass
 
-
 		channel = self.get_guild(1036051546284249139)
-		if not channel:
-			return
-
-		logs = channel.get_channel(1179015275065131069)
-		if logs and isinstance(logs, nextcord.TextChannel):
-			self.LOGS_CHANNEL = logs
+		if channel:
+			logs = channel.get_channel(1179015275065131069)
+			if logs and isinstance(logs, nextcord.TextChannel):
+				self.LOGS_CHANNEL = logs
 
 	async def on_member_join(self, member:nextcord.Member):
 		fourteenDays = 60 * 60 * 24 * 14
@@ -186,12 +182,11 @@ class AccountBot(nextcord.Client):
 				)
 
 	async def on_message(self, message:nextcord.Message):
-		if message.author == self.user or not isinstance(message.channel, nextcord.TextChannel) or self.GIT_COMMIT_PENDING:
+		if message.author == self.user or not isinstance(message.channel, nextcord.TextChannel):
 			if isinstance(message.channel, nextcord.DMChannel) and self.LOGS_CHANNEL: # not in account's folder but in a DM, so we send that to a channel
 				await self.LOGS_CHANNEL.send(f"From: {message.author.mention}:")
 				await message.forward(self.LOGS_CHANNEL)
 			return
-
 		userData = self.getDataFromMember(message.author)
 
 		# Honeypot
@@ -201,7 +196,8 @@ class AccountBot(nextcord.Client):
 			await self.tryDM(
 				"## You've been HACKED!!\n\n"
 				"Either you got this by getting yourself (intentionally) hacked or just too curious to go to a channel that's for a honeypot.\n\n"
-				"If you *did* get hacked, CHANGE your password, ADD 2fa, UNAUTHORIZE anything suspicious in your account (`User Settings > Devices | Authorised Apps`)\n\n"
+				"If you *did* get hacked, CHANGE your password, ADD 2 Factor Authentification, "
+				"UNAUTHORIZE anything suspicious in your account (`User Settings > Devices | Authorised Apps`)\n\n"
 				"If you took all actions (or just became too curious), then you can join back this server: https://discord.gg/dsRUP9MAxY\n\n"
 				"-# Oh and no, you're not banned.",
 				message.author
@@ -212,18 +208,16 @@ class AccountBot(nextcord.Client):
 		# Community Channel Checks
 		if (message.attachments or message.snapshots) and \
 			message.channel.category and isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id == 1208732034340487208:
-			firstAttachment:nextcord.Attachment
+			media:nextcord.Attachment
 			if message.attachments:
-				firstAttachment = message.attachments[0]
+				media = message.attachments[0]
 			elif message.snapshots and message.snapshots and message.snapshots[0].attachments:
-				firstAttachment = message.snapshots[0].attachments[0]
+				media = message.snapshots[0].attachments[0]
 
-			if firstAttachment and firstAttachment.content_type:
-				nameContent = firstAttachment.content_type.split("/", 1)[0].lower()
-				if nameContent in ["image", "video", "audio"]:
-					await asyncio.sleep(0.25) # maybe wait a bit, for some reason it just doesn't give out the ⬆️ reaction and thinks the bot doesn't like that artwork
-					for emoji in ['⬆️', '⬇️']:
-						await message.add_reaction(emoji)
+			if (media and media.content_type or "").split("/", 1)[0].lower() in ["image", "video", "audio"]:
+				await asyncio.sleep(0.25) # maybe wait a bit, for some reason it just doesn't give out the ⬆️ reaction and thinks the bot doesn't like that artwork
+				for emoji in ['⬆️', '⬇️']:
+					await message.add_reaction(emoji)
 			return
 
 		# Bot Commands (not using discord's / commands)
@@ -238,6 +232,14 @@ class AccountBot(nextcord.Client):
 					await command.asyncFunction(self=self, message=message)
 					return
 				await message.reply(f"You are using this command way too quickly! Please wait about `{round(timeLeft, 2)} seconds` to run this command again.")
+
+	async def on_error(self, error):
+		with open("data/exception.txt", "w", encoding="utf-8") as f:
+			f.write(traceback.format_exc().replace("  ", "\t"))
+
+		user = self.get_user(786639413282209802)
+		if user:
+			await user.send(f"New Exception Occurred!\nReason: `{error}`", file=nextcord.File("data/exception.txt", "exception.txt"))
 
 if __name__ == "__main__":
 	AccountBot(intents=nextcord.Intents.all()).run(sys.argv[1])
