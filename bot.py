@@ -245,7 +245,7 @@ class AccountBot(nextcord.Client):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:
 			f.write(traceback.format_exc().replace("  ", "\t"))
 
-		user = self.get_user(786639413282209802)
+		user = self.get_user(consts.DEVELOPER_ID)
 		if user:
 			await user.send(f"New Exception Occurred!\nReason: `{error}`", file=nextcord.File("data/exception.txt", "exception.txt"))
 		os.remove("data/exception.txt")
