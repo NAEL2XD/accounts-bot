@@ -67,7 +67,7 @@ class AccountBot(nextcord.Client):
 				try:
 					r.raise_for_status()
 				except aiohttp.ClientResponseError:
-					return ""
+					return
 				commit = str((await r.json())[0]["sha"]).strip().lower()
 
 		if commit in [self.CUR_COMMIT, ""]:
