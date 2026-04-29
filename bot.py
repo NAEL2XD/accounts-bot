@@ -164,8 +164,8 @@ class AccountBot(slashcmds.Bot):
 
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
 		cID = self.get_channel(m.channel_id)
-		if not cID or not isinstance(cID, nextcord.TextChannel) or not cID.category_id != consts.COMMUNITY_ID:
-			return # This shouldn't happen
+		if not cID or not isinstance(cID, nextcord.TextChannel) or cID.category_id != consts.COMMUNITY_ID:
+			return
 
 		mID = await cID.fetch_message(m.message_id)
 		if not mID or not isinstance(mID.channel, nextcord.TextChannel): # CCC
