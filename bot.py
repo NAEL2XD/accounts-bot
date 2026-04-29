@@ -229,7 +229,7 @@ class AccountBot(slashcmds.Bot):
 
 	async def on_error(self, error):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:
-			f.write(traceback.format_exc().replace("  ", "\t"))
+			f.write(traceback.format_exc())
 
 		user = self.get_user(consts.DEVELOPER_ID)
 		if user:
