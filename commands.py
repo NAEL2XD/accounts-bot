@@ -8,9 +8,9 @@ async def help(i:nextcord.Interaction, command:str):
 	with open(f"data/help/{command}.txt", "r") as f:
 		await i.response.send_message(f"# Detailed Help about the command `/{command}`:\n\n{f.read()}")
 
-async def bomb(i:nextcord.Interaction, self:AccountBot, user:nextcord.Member, lb:bool):
+async def bomb(i:nextcord.Interaction, self:AccountBot, target:nextcord.Member, lb:bool):
 	# maybe it should be on its own command
-	if not user and lb:
+	if lb:
 		sender = "## Bombed Rankings:\n"
 		for rank, (userID, data) in enumerate(heapq.nlargest(10, self.USER_DATA.items(), key=lambda x: x[1].bombed)): # wtf
 			user = self.get_user(userID)
@@ -18,7 +18,7 @@ async def bomb(i:nextcord.Interaction, self:AccountBot, user:nextcord.Member, lb
 				sender += f"{rank + 1}. **`{user.name}`** with *`{data.bombed}`* bomb count.\n"
 		await i.response.send_message(sender)
 		return
-	elif not user:
+	elif not target:
 		await i.response.send_message("Cannot do task as user's field is null")
 		return
 
@@ -26,16 +26,16 @@ async def bomb(i:nextcord.Interaction, self:AccountBot, user:nextcord.Member, lb
 	while random.random() < 0.5:
 		increment += 1
 
-	targetID = self.getDataFromMember(user)
+	targetID = self.getDataFromMember(target)
 	targetID.bombed += increment
 
 	sendMsg = "get bombed you bozo :joy:"
 	if increment > 1:
 		sendMsg = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {":joy:" * increment}"
 
-	await i.response.send_message(f"{user.mention} {sendMsg}, user got bombed {targetID.bombed} times")
-	if targetID.bombed >= 5 and isinstance(user, nextcord.Member):
-		await achievement.unlock(self, user, "Bomber Enthusiastic")
+	await i.response.send_message(f"{target.mention} {sendMsg}, user got bombed {targetID.bombed} times")
+	if targetID.bombed >= 5 and isinstance(target, nextcord.Member):
+		await achievement.unlock(self, target, "Bomber Enthusiastic")
 
 async def achievements(i:nextcord.Interaction):
 	if not (i.guild and i.user and isinstance(i.user, nextcord.Member)):

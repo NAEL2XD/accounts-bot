@@ -261,16 +261,16 @@ if __name__ == "__main__":
 	@self.slash_command(description="Shows the current Help Command.")
 	async def help(
 		i:nextcord.Interaction,
-		command:str = nextcord.SlashOption(description="The command to use from the choices.", choices=["bomb", "achievements", "help"])
-	): await commands.help(i, command)
+		Command:str = nextcord.SlashOption(description="The command to use from the choices.", choices=["bomb", "achievements", "help"])
+	): await commands.help(i, Command)
 
 	@self.slash_command(description="Bomb someone else `(@ping them)` or just yourself!")
 	@cooldown(30)
 	async def bomb(
 		i:nextcord.Interaction,
-		user:nextcord.Member = nextcord.SlashOption(description="User to target and bomb.", required=False),
-		lb:bool = nextcord.SlashOption(description="Optional field if you wanna see the leaderboard (user must be null)", required=False)
-	): await commands.bomb(i, self, user, lb)
+		Member:nextcord.Member = nextcord.SlashOption(description="User to target and bomb.", required=False),
+		Leaderboard:bool = nextcord.SlashOption(description="Optional field if you wanna see the leaderboard (user must be null)", required=False)
+	): await commands.bomb(i, self, Member, Leaderboard)
 
 	@self.slash_command(description="Shows stats of all the achievements with detail and such.")
 	async def achievements(i:nextcord.Interaction):

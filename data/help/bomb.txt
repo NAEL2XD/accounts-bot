@@ -4,20 +4,20 @@ If there isn't a mentioned user found in your message's contents, this will bomb
 
 If there is a mention user found in your message's contents, this will bomb the pinged user instead.
 
-If you want to view the leaderboard, you'll need to send this command: `.bomb [lb/leaderboard]`
+If you want to view the leaderboard, you'll need to send this command: `/bomb null True`
 
 ## Arguments:
-`.bomb (mentioned username | [lb/leaderboard])`
+`/bomb (Member<Member> | Leaderboard<Boolean>)`
 
 ## Example Usage:
 ```
-> .bomb
+> /bomb
 >> <@you> get bombed you bozo :joy:, user got bombed <@you's bombed counter> times
 
-> .bomb @stranger
+> /bomb @stranger
 >> <@stranger> get bombed you bozo :joy:, user got bombed <@stranger's bombed counter> times
 
-> .bomb lb
+> /bomb null True
 >> [leaderboard goes here]
 ```
 
