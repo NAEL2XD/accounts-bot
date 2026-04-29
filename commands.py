@@ -1,100 +1,108 @@
-from bot import *
+import time
 import heapq
 import random
-import achievements
+import nextcord
+import achievements as achievement
+from bot import AccountBot
+from functools import wraps
+from nextcord.ext import commands
 
-class Command:
-	def __init__(
-		self,
-		description:str,
-		asyncFunction,
-		cooldown:float = 0,
-	) -> None:
-		self.description = description
-		self.asyncFunction = asyncFunction
-		self.cooldown = cooldown
+def cooldown(seconds:float):
+	def decorator(func):
+		@wraps(func)
+		async def wrapper(self:'BotCommands', i:nextcord.Interaction, *args, **kwargs):
+			if not i.user:
+				return
 
-CMDS:dict[str, Command] = {}
+			user = self.bot.getDataFromMember(i.user)
+			left = user.cmdTimestamp - time.time() + seconds
+			if left < 0:
+				if seconds != 0:
+					user.cmdTimestamp = time.time()
+				return await func(self=self, i=i, *args, **kwargs)
 
-async def command_help(self:AccountBot, message:nextcord.Message):
-	command = message.content[1:].split(" ", 2)
-	if len(command) >= 2:
-		cmd = command[1]
-		if cmd in CMDS:
-			with open(f"data/help/{cmd}.txt", "r") as f:
-				await message.reply(f"# Detailed Help about the command `.{cmd}`:\n\n{f.read()}")
-		else:
-			await message.reply(f"Command `{cmd}` was not found in the files.")
-		return
-
-	toSend = "## Help Commands:\n"
-	for name, commandData in CMDS.items():
-		toSend += "`.{}`: *{}*{}\n".format(
-			name,
-			commandData.description,
-			f" - ***This Command has a Cooldown of {commandData.cooldown} seconds***" if commandData.cooldown != 0 else ""
-		)
-	await message.reply(f"{toSend}\n-# Tip: For a detailed explanation, type `.help (command)`.")
-
-async def command_bomb(self:AccountBot, message:nextcord.Message):
-	# maybe it should be on its own command
-	s = message.content.split(" ", 1)
-	if len(s) > 1 and s[1] in ["lb", "leaderboard"]:
-		self.getDataFromMember(message.author).cmdTimestamp = 0 # reset the timestamp
-
-		sender = "## Bombed Rankings:\n"
-		for rank, (userID, data) in enumerate(heapq.nlargest(10, self.USER_DATA.items(), key=lambda x: x[1].bombed)): # wtf
-			user = self.get_user(userID)
-			if user:
-				sender += f"{rank + 1}. **`{user.name}`** with *`{data.bombed}`* bomb count.\n"
-		await message.reply(sender)
-		return
-
-	increment = 1
-	while random.random() < 0.5:
-		increment += 1
-
-	targetUser = message.mentions[0] if message.mentions else message.author
-	targetID = self.getDataFromMember(targetUser)
-	targetID.bombed += increment
-
-	sendMsg = "get bombed you bozo :joy:"
-	if increment > 1:
-		sendMsg = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {":joy:" * increment}"
-
-	await message.channel.send(f"{targetUser.mention} {sendMsg}, user got bombed {targetID.bombed} times")
-	if targetID.bombed >= 5 and isinstance(targetUser, nextcord.Member):
-		await achievements.unlock(self, targetUser, "Bomber Enthusiastic")
-
-async def command_achievements(self:AccountBot, message:nextcord.Message):
-	if not (message.guild and message.author and isinstance(message.author, nextcord.Member)):
-		return
-
-	sender = "# ACHIEVEMENTS:\n"
-	members = message.guild.member_count or 0
-	for name, data in achievements.ROLES.items():
-		role = message.guild.get_role(data.roleID)
-		if role:
-			totalWithRole = len(role.members)
-			sender += "`{}`: {}{}\n-# **{}** of the users have this role.\n\n".format(
-				name, data.description, " - ***You already have this role!***" if role in message.author.roles else "",
-				f"{round((totalWithRole / members) * 100, 2)}% `{totalWithRole} / {members}`"
+			return await i.response.send_message(
+				f"You are using this command way too quickly! Please wait about `{round(left, 2)} seconds` to run this command again, or wait until my message gets deleted automatically.",
+				delete_after=left
 			)
+		return wrapper
+	return decorator
 
-	await message.reply(sender)
+class BotCommands(commands.Cog):
+	def __init__(self, bot:AccountBot):
+		self.bot = bot
 
-CMDS = {
-	"help": Command(
-		description="Shows the current Help Command.",
-		asyncFunction=command_help
-	),
-	"bomb": Command(
-		description="Bomb someone else `(@ping them)` or just yourself!",
-		asyncFunction=command_bomb,
-		cooldown=45
-	),
-	"achievements": Command(
-		description="Shows stats of all the achievements with detail and such.",
-		asyncFunction=command_achievements
-	)
-}
+	@nextcord.slash_command(description="Shows the current Help Command.")
+	async def help(
+		self,
+		i:nextcord.Interaction,
+		command:str = nextcord.SlashOption(
+			description="The command to use from the choices.", 
+			choices=["help", "bomb", "achievements"]
+		)
+	):
+		with open(f"data/help/{command}.txt", "r") as f:
+			await i.response.send_message(f"# Detailed Help about the command `/{command}`:\n\n{f.read()}")
+
+	@nextcord.slash_command(description="Bomb someone else or just yourself!")
+	@cooldown(30)
+	async def bomb(
+		self,
+		i:nextcord.Interaction,
+		member:nextcord.Member = nextcord.SlashOption(
+			description="User to target and bomb.", 
+			required=False
+		),
+		leaderboard:bool = nextcord.SlashOption(
+			description="Optional field if you wanna see the leaderboard (member must be null)", 
+			required=False
+		)
+	):
+		if leaderboard and i.user:
+			self.bot.getDataFromMember(i.user).cmdTimestamp = 0
+
+			sender = "## Bombed Rankings:\n"
+			for rank, (user_id, data) in enumerate(heapq.nlargest(10, self.bot.USER_DATA.items(), key=lambda x: x[1].bombed)):
+				user = self.bot.get_user(user_id)
+				if user:
+					sender += f"{rank + 1}. **`{user.name}`** with *`{data.bombed}`* bomb count.\n"
+
+			await i.response.send_message(sender)
+			return
+
+		if not member:
+			await i.response.send_message("Cannot do task as user's field is null")
+			return
+
+		increment = 1
+		while random.random() < 0.5:
+			increment += 1
+
+		sender = "get bombed you bozo :joy:"
+		if increment > 1:
+			sender = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {' :joy:' * increment}"
+
+		target = self.bot.getDataFromMember(member)
+		target.bombed += increment
+
+		await i.response.send_message(f"{member.mention} {sender}, user got bombed {target.bombed} times")
+		if target.bombed >= 5 and isinstance(member, nextcord.Member):
+			await achievement.unlock(self.bot, member, "Bomber Enthusiastic")
+
+	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.")
+	async def achievements(self, i:nextcord.Interaction):
+		if not (i.guild and i.user and isinstance(i.user, nextcord.Member)):
+			return
+
+		sender = "# ACHIEVEMENTS:\n"
+		members = i.guild.member_count or 1
+		for name, data in achievement.ROLES.items():
+			role = i.guild.get_role(data.roleID)
+			if role:
+				totalWithRole = len(role.members)
+				sender += "`{}`: {}{}\n-# **{}** of the users have this role.\n\n".format(
+					name, data.description, " - ***You already have this role!***" if role in i.user.roles else "",
+					f"{round((totalWithRole / members) * 100, 2)}% `{totalWithRole} / {members}`"
+				)
+
+		await i.response.send_message(sender)
