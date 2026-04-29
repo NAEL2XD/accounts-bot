@@ -12,8 +12,7 @@ from typing import Union
 from nextcord.ext import tasks, commands as slashcmds
 
 if __name__ == "__main__":
-	import commands
-	import achievements as achievement
+	import achievements
 
 Member = Union[nextcord.User, nextcord.Member]
 
@@ -179,7 +178,7 @@ class AccountBot(slashcmds.Bot):
 				emojiDict[emoji] = 1
 
 		if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1 and isinstance(mID.author, nextcord.Member):
-			await achievement.unlock(
+			await achievements.unlock(
 				self, mID.author, "Everyone Loves It", 
 				"# Congratulations!!\n\n"
 				f"Your [post]({mID.jump_url}) there was a massive success!\n\n"
@@ -236,6 +235,7 @@ class AccountBot(slashcmds.Bot):
 		os.remove("data/exception.txt")
 
 if __name__ == "__main__":
+	import commands
 	self = AccountBot(intents=nextcord.Intents.all())
 	self.add_cog(commands.BotCommands(self))
 	self.run(sys.argv[1])
