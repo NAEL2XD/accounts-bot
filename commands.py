@@ -58,7 +58,7 @@ class BotCommands(commands.Cog):
 			required=False
 		)
 	):
-		if leaderboard and i.user:
+		if i.user and leaderboard:
 			self.bot.getDataFromMember(i.user).cmdTimestamp = 0
 
 			sender = "## Bombed Rankings:\n"
@@ -70,28 +70,25 @@ class BotCommands(commands.Cog):
 			await i.response.send_message(sender)
 			return
 
-		if not member:
-			await i.response.send_message("Cannot do task as user's field is null")
-			return
-
 		increment = 1
 		while random.random() < 0.5:
 			increment += 1
 
 		sender = "get bombed you bozo :joy:"
 		if increment > 1:
-			sender = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {' :joy:' * increment}"
+			sender = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {':joy:' * increment}"
 
-		target = self.bot.getDataFromMember(member)
+		user = member or i.user
+		target = self.bot.getDataFromMember(user)
 		target.bombed += increment
 
-		await i.response.send_message(f"{member.mention} {sender}, user got bombed {target.bombed} times")
-		if target.bombed >= 5 and isinstance(member, nextcord.Member):
-			await achievement.unlock(self.bot, member, "Bomber Enthusiastic")
+		await i.response.send_message(f"{user.mention} {sender}, user got bombed {target.bombed} times")
+		if target.bombed >= 5:
+			await achievement.unlock(self.bot, user, "Bomber Enthusiastic")
 
 	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.")
 	async def achievements(self, i:nextcord.Interaction):
-		if not (i.guild and i.user and isinstance(i.user, nextcord.Member)):
+		if not (i.guild and isinstance(i.user, nextcord.Member)):
 			return
 
 		sender = "# ACHIEVEMENTS:\n"
