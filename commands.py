@@ -50,11 +50,11 @@ class BotCommands(commands.Cog):
 		self,
 		i:nextcord.Interaction,
 		member:nextcord.Member = nextcord.SlashOption(
-			description="User to target and bomb.", 
+			description="User to target and bomb, null to bomb yourself.", 
 			required=False
 		),
 		leaderboard:bool = nextcord.SlashOption(
-			description="Optional field if you wanna see the leaderboard (member must be null)", 
+			description="Optional field if you wanna see the leaderboard", 
 			required=False
 		)
 	):
