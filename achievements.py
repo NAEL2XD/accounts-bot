@@ -1,4 +1,5 @@
-from bot import *
+import consts
+from bot import nextcord, AccountBot
 
 class Achievement:
 	def __init__(

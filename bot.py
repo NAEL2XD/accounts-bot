@@ -9,12 +9,12 @@ import aiohttp
 import nextcord
 import traceback
 from typing import Union
-from nextcord.ext import tasks
+from functools import wraps
+from nextcord.ext import tasks, commands as slashcmds
 
 if __name__ == "__main__":
-	# circular import fix
 	import commands
-	import achievements
+	import achievements as achievement
 
 Member = Union[nextcord.User, nextcord.Member]
 
@@ -28,7 +28,7 @@ class UserData:
 			if key in data and isinstance(data[key], type(self.__dict__[key])):
 				self.__dict__[key] = data[key]
 
-class AccountBot(nextcord.Client):
+class AccountBot(slashcmds.Bot):
 	USER_DATA:dict[int, UserData] = {}
 	LOGS_CHANNEL:nextcord.TextChannel|None = None
 	SAVE_OUTDATED = False
@@ -93,7 +93,6 @@ class AccountBot(nextcord.Client):
 				'fi',
 				'cp -rf ./.tmp/. .',
 				'echo wait for start...',
-				'sleep 2',
 				f'~/env/bin/python bot.py "{sys.argv[1]}"'
 			]))
 
@@ -110,7 +109,7 @@ class AccountBot(nextcord.Client):
 	# CURRENT CONFIG
 	#
 	def __init__(self, *, intents: nextcord.Intents) -> None:
-		super().__init__(intents=intents)
+		super().__init__(intents=intents, default_guild_ids=None)
 		if os.path.exists("data/users.json"):
 			with open("data/users.json", "r") as f:
 				self.USER_DATA = {int(key): UserData(value) for key, value in dict(json.load(f)).items()}
@@ -167,7 +166,7 @@ class AccountBot(nextcord.Client):
 
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
 		cID = self.get_channel(m.channel_id)
-		if not cID or not isinstance(cID, nextcord.TextChannel) or not cID.category_id or cID.category_id != consts.COMMUNITY_ID:
+		if not cID or not isinstance(cID, nextcord.TextChannel) or not cID.category_id != consts.COMMUNITY_ID:
 			return # This shouldn't happen
 
 		mID = await cID.fetch_message(m.message_id)
@@ -181,7 +180,7 @@ class AccountBot(nextcord.Client):
 				emojiDict[emoji] = 1
 
 		if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1 and isinstance(mID.author, nextcord.Member):
-			await achievements.unlock(
+			await achievement.unlock(
 				self, mID.author, "Everyone Loves It", 
 				"# Congratulations!!\n\n"
 				f"Your [post]({mID.jump_url}) there was a massive success!\n\n"
@@ -219,27 +218,14 @@ class AccountBot(nextcord.Client):
 			media:nextcord.Attachment
 			if message.attachments:
 				media = message.attachments[0]
-			elif message.snapshots and message.snapshots and message.snapshots[0].attachments:
+			elif message.snapshots and message.snapshots[0].attachments:
 				media = message.snapshots[0].attachments[0]
 
 			if (media and media.content_type or "").split("/", 1)[0].lower() in ["image", "video", "audio"]:
-				await asyncio.sleep(0.25) # maybe wait a bit, for some reason it just doesn't give out the ⬆️ reaction and thinks the bot doesn't like that artwork
+				await asyncio.sleep(0.25)
 				for emoji in ['⬆️', '⬇️']:
 					await message.add_reaction(emoji)
 			return
-
-		# Bot Commands (not using discord's / commands)
-		if message.content and message.content[0] == ".":
-			cmd = message.content[1:].split(" ", 1)[0]
-			if cmd in commands.CMDS:
-				command = commands.CMDS[cmd]
-				timeLeft = userData.cmdTimestamp - time.time() + command.cooldown
-				if timeLeft < 0:
-					if command.cooldown != 0:
-						userData.cmdTimestamp = time.time()
-					await command.asyncFunction(self=self, message=message)
-					return
-				await message.reply(f"You are using this command way too quickly! Please wait about `{round(timeLeft, 2)} seconds` to run this command again.")
 
 	async def on_error(self, error):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:
@@ -251,4 +237,43 @@ class AccountBot(nextcord.Client):
 		os.remove("data/exception.txt")
 
 if __name__ == "__main__":
-	AccountBot(intents=nextcord.Intents.all()).run(sys.argv[1])
+	self = AccountBot(intents=nextcord.Intents.all())
+
+	# BOILERPLATE BULLSHIT but it works but also it fucking sucks
+	def cooldown(seconds: float):
+		def decorator(func):
+			@wraps(func)
+			async def wrapper(i:nextcord.Interaction, *args, **kwargs):
+				if not i.user:
+					return
+
+				user = self.getDataFromMember(i.user)
+				timeLeft = user.cmdTimestamp - time.time() + seconds
+				if timeLeft < 0:
+					if seconds != 0:
+						user.cmdTimestamp = time.time()
+					return await func(i=i, *args, **kwargs)
+				return await i.response.send_message(f"You are using this command way too quickly! Please wait about `{round(timeLeft, 2)} seconds` to run this command again.")
+			return wrapper
+		return decorator
+
+	# TODO: somehow make this in commands.py and also make it register too
+	@self.slash_command(description="Shows the current Help Command.")
+	async def help(
+		i:nextcord.Interaction,
+		command:str = nextcord.SlashOption(description="The command to use from the choices.", choices=["bomb", "achievements", "help"])
+	): await commands.help(i, command)
+
+	@self.slash_command(description="Bomb someone else `(@ping them)` or just yourself!")
+	@cooldown(30)
+	async def bomb(
+		i:nextcord.Interaction,
+		user:nextcord.Member = nextcord.SlashOption(description="User to target and bomb.", required=False),
+		lb:bool = nextcord.SlashOption(description="Optional field if you wanna see the leaderboard (user must be null)", required=False)
+	): await commands.bomb(i, self, user, lb)
+
+	@self.slash_command(description="Shows stats of all the achievements with detail and such.")
+	async def achievements(i:nextcord.Interaction):
+		await commands.achievements(i)
+
+	self.run(sys.argv[1])
