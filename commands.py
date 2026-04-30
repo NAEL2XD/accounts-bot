@@ -1,3 +1,4 @@
+import os
 import time
 import heapq
 import random
@@ -103,3 +104,18 @@ class BotCommands(commands.Cog):
 				)
 
 		await i.response.send_message(sender)
+
+	@nextcord.slash_command(description="Shows information about this custom bot.")
+	async def about(self, i:nextcord.Interaction):
+		commit = "?"
+		if os.path.exists("data/commit.txt"):
+			with open("data/commit.txt", "r") as f:
+				commit = f.read()
+
+		await i.response.send_message(embed=nextcord.Embed(
+			color=0x674CE4,
+			title=f"*`Account's rBot`* (Commit {commit})",
+			description=
+				"Account's rBot is a custom bot programmed for this server only. It provides utilities, moderation, and much more.\n"
+				"[*Source Code*](https://github.com/NAEL2XD/accounts-bot) • [*Made by Nael2xd*](<https://discord.com/users/786639413282209802>)",
+		))
