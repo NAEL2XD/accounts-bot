@@ -103,6 +103,33 @@ class AccountBot(slashcmds.Bot):
 		except:
 			pass
 
+	async def voteHandler(self, message:nextcord.Message):
+		if isinstance(message.channel, nextcord.TextChannel) and message.channel.category and \
+			isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id != consts.COMMUNITY_ID:
+			return
+
+		media:nextcord.Attachment|None = None
+		if message.attachments:
+			media = message.attachments[0]
+		elif message.snapshots and message.snapshots[0].attachments:
+			media = message.snapshots[0].attachments[0]
+
+		if (media and media.content_type or "").split("/", 1)[0].lower() in ["image", "video", "audio"]:
+			emojiDict = {str(emoji): emoji.count for emoji in message.reactions if str(emoji) in ['⬆️', '⬇️'] and emoji.me}
+			for emoji in ["⬆️", "⬇️"]: # KeyError goes bye.
+				if emoji not in emojiDict:
+					await message.add_reaction(emoji)
+					emojiDict[emoji] = 1
+
+			if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1 and isinstance(message.author, nextcord.Member):
+				await achievements.unlock(
+					self, message.author, "Everyone Loves It", 
+					"# Congratulations!!\n\n"
+					f"Your [post]({message.jump_url}) there was a massive success!\n\n"
+					"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
+					"Check your profile, it should be there now, and have fun with your new role!"
+				)
+
 	#
 	# CURRENT CONFIG
 	#
@@ -167,24 +194,9 @@ class AccountBot(slashcmds.Bot):
 		if not cID or not isinstance(cID, nextcord.TextChannel) or cID.category_id != consts.COMMUNITY_ID:
 			return
 
-		mID = await cID.fetch_message(m.message_id)
-		if not mID or not isinstance(mID.channel, nextcord.TextChannel): # CCC
-			return
-
-		emojiDict = {str(emoji): emoji.count for emoji in mID.reactions if str(emoji) in ['⬆️', '⬇️'] and emoji.me}
-		for emoji in ["⬆️", "⬇️"]: # KeyError goes bye.
-			if emoji not in emojiDict:
-				await mID.add_reaction(emoji)
-				emojiDict[emoji] = 1
-
-		if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1 and isinstance(mID.author, nextcord.Member):
-			await achievements.unlock(
-				self, mID.author, "Everyone Loves It", 
-				"# Congratulations!!\n\n"
-				f"Your [post]({mID.jump_url}) there was a massive success!\n\n"
-				"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
-				"Check your profile, it should be there now, and have fun with your new role!"
-			)
+		msg = await cID.fetch_message(m.message_id)
+		if msg: # CCC
+			await self.voteHandler(msg)
 
 	async def on_message(self, message:nextcord.Message):
 		isSelf = message.author == self.user
@@ -211,19 +223,7 @@ class AccountBot(slashcmds.Bot):
 			return
 
 		# Community Channel Checks
-		if (message.attachments or message.snapshots) and \
-			message.channel.category and isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id == consts.COMMUNITY_ID:
-			media:nextcord.Attachment
-			if message.attachments:
-				media = message.attachments[0]
-			elif message.snapshots and message.snapshots[0].attachments:
-				media = message.snapshots[0].attachments[0]
-
-			if (media and media.content_type or "").split("/", 1)[0].lower() in ["image", "video", "audio"]:
-				await asyncio.sleep(0.25)
-				for emoji in ['⬆️', '⬇️']:
-					await message.add_reaction(emoji)
-			return
+		await self.voteHandler(message)
 
 	async def on_error(self, error):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:

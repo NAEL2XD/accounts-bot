@@ -110,7 +110,7 @@ class BotCommands(commands.Cog):
 		commit = "?"
 		if os.path.exists("data/commit.txt"):
 			with open("data/commit.txt", "r") as f:
-				commit = f.read()
+				commit = f.read()[:8]
 
 		await i.response.send_message(embed=nextcord.Embed(
 			color=0x674CE4,
