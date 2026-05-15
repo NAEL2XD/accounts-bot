@@ -39,10 +39,10 @@ class BotCommands(commands.Cog):
 		i:nextcord.Interaction,
 		command:str = nextcord.SlashOption(
 			description="The command to use from the choices.", 
-			choices=["help", "bomb", "achievements"]
+			choices=os.listdir("data/help")
 		)
 	):
-		with open(f"data/help/{command}.txt", "r") as f:
+		with open(f"data/help/{command}", "r") as f:
 			await i.response.send_message(f"# Detailed Help about the command `/{command}`:\n\n{f.read()}")
 
 	@nextcord.slash_command(description="Bomb someone else or just yourself!")
@@ -119,3 +119,28 @@ class BotCommands(commands.Cog):
 				"Account's rBot is a custom bot programmed for this server only. It provides utilities, moderation, and much more.\n"
 				"[*Source Code*](https://github.com/NAEL2XD/accounts-bot) • [*Made by Nael2xd*](<https://discord.com/users/786639413282209802>)",
 		))
+
+	@nextcord.message_command("Warn AI Usage")
+	async def warnAI(self, i:nextcord.Interaction, message:nextcord.Message):
+		user = i.user
+		if not isinstance(user, nextcord.Member):
+			return
+
+		logs = self.bot.LOGS_CHANNEL
+		if logs:
+			await logs.send(
+				"## ⚠️ Potential Usage of AI Reported!\n"
+				f"**Reporter**: {user.mention}\n"
+				f"**Message Link**: {message.jump_url}\n"
+				"-# <@&1483900217945231481> <@&1188212983940255824>"
+			)
+
+			await message.reply(embed=nextcord.Embed(
+				color=0xFF0040,
+				title="Potential AI Use Found",
+				description="An individual has reported this message for the usage of AI.\n"
+							"This server has NO tolerance of any AI Generated Content (Rule 8) and has been alerted to staff.\n\n"
+							"-# ***Repeated usage of AI will result in harsher punishments.***"
+			))
+	
+			await i.response.send_message("Potential Reporting has been Logged.", ephemeral=True)

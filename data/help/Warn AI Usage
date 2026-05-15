@@ -1,0 +1,15 @@
+A button that appears in your Message Context Menu, this reports a message for Potential Usage of AI and logs it to the Logs Channel.
+
+If the message is indeed AI generated, it'll be removed and be asked to never do it again.
+
+Spamming the usage of this button will get you a harsh punishment, so do not actually do it.
+
+## Arguments:
+Warn AI Usage does not have any arguments, just hover the message, and click, that's it.
+
+## Example Usage:
+```
+> *Message has potential use of AI...*
+> >Warn AI Usage
+>> Potential Reporting has been Logged.
+```
