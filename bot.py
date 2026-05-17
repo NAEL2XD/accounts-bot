@@ -53,7 +53,7 @@ class AccountBot(slashcmds.Bot):
 		hours, remainder = divmod(time.time() - self.LAST_ONLINE, 3600)
 		minutes, seconds = divmod(remainder, 60)
 		await self.change_presence(
-			activity=nextcord.Game(f"UPTIME: {hours} hours, {minutes} minutes, {seconds} seconds"),
+			activity=nextcord.Game(f"UPTIME: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"),
 			status=nextcord.Status.do_not_disturb
 		)
 
