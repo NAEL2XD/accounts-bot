@@ -18,6 +18,10 @@ ROLES = {
 	"Bomber Enthusiastic": Achievement(
 		description="Get bombed over 5 times, exploded into oblivion.",
 		roleID=consts.BE_ROLE
+	),
+	"Well Donexplosion": Achievement(
+		description="Get lucky and make someone get bombed 5 times in 1 command, Abracadaboom!",
+		roleID=consts.WDP_ROLE
 	)
 }
 

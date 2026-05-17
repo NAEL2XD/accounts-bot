@@ -1,6 +1,7 @@
 import os
 import time
 import heapq
+import consts
 import random
 import nextcord
 import achievements as achievement
@@ -18,8 +19,7 @@ def cooldown(seconds:float):
 			user = self.bot.getDataFromMember(i.user)
 			left = user.cmdTimestamp - time.time() + seconds
 			if left < 0:
-				if seconds != 0:
-					user.cmdTimestamp = time.time()
+				user.cmdTimestamp = time.time()
 				return await func(self=self, i=i, *args, **kwargs)
 
 			return await i.response.send_message(
@@ -59,7 +59,10 @@ class BotCommands(commands.Cog):
 			required=False
 		)
 	):
-		if i.user and leaderboard:
+		if not (i.user and isinstance(i.user, nextcord.Member)):
+			return
+
+		if leaderboard:
 			self.bot.getDataFromMember(i.user).cmdTimestamp = 0
 
 			sender = "## Bombed Rankings:\n"
@@ -75,17 +78,27 @@ class BotCommands(commands.Cog):
 		while random.random() < 0.5:
 			increment += 1
 
-		sender = "get bombed you bozo :joy:"
-		if increment > 1:
-			sender = f"WOW! Mega BOMBED! user didn't explode not once but ***{increment} TIMES!*** {':joy:' * increment}"
+		funnies = {
+			1: "WOW! Mega BOMBED! user did explode not once but ***{} TIMES!***",
+			5: "TACTICAL NUKE!!! user exploded a GRAND TOTAL OF __***{} TIMES!***__"
+		}
+
+		sender = "get bombed you bozo"
+		for condition, message in funnies.items():
+			if increment > condition:
+				sender = message.format(increment)
+			else:
+				break
 
 		user = member or i.user
 		target = self.bot.getDataFromMember(user)
 		target.bombed += increment
 
-		await i.response.send_message(f"{user.mention} {sender}, user got bombed {target.bombed} times")
+		await i.response.send_message(f"{user.mention} {sender} {':joy:' * increment}, user got bombed {target.bombed} times")
 		if target.bombed >= 5:
 			await achievement.unlock(self.bot, user, "Bomber Enthusiastic")
+		if increment >= 5:
+			await achievement.unlock(self.bot, i.user, "Well Donexplosion")
 
 	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.")
 	async def achievements(self, i:nextcord.Interaction):
@@ -123,24 +136,22 @@ class BotCommands(commands.Cog):
 	@nextcord.message_command("Warn AI Usage")
 	async def warnAI(self, i:nextcord.Interaction, message:nextcord.Message):
 		user = i.user
-		if not isinstance(user, nextcord.Member):
+		if not (isinstance(user, nextcord.Member) and self.bot.LOGS_CHANNEL):
 			return
 
-		logs = self.bot.LOGS_CHANNEL
-		if logs:
-			await logs.send(
-				"## ⚠️ Potential Usage of AI Reported!\n"
-				f"**Reporter**: {user.mention}\n"
-				f"**Message Link**: {message.jump_url}\n"
-				"-# <@&1483900217945231481> <@&1188212983940255824>"
-			)
+		await self.bot.LOGS_CHANNEL.send(
+			"## ⚠️ Potential Usage of AI Reported!\n"
+			f"**Reporter**: {user.mention}\n"
+			f"**Message Link**: {message.jump_url}\n"
+			f"-# <@&{consts.MOD_ROLE}> <@&{consts.ADMIN_ROLE}>"
+		)
 
-			await message.reply(embed=nextcord.Embed(
-				color=0xFF0040,
-				title="Potential AI Use Found",
-				description="An individual has reported this message for the usage of AI.\n"
-							"This server has NO tolerance of any AI Generated Content (Rule 8) and has been alerted to staff.\n\n"
-							"-# ***Repeated usage of AI will result in harsher punishments.***"
-			))
+		await message.reply(embed=nextcord.Embed(
+			color=0xFF0040,
+			title="Potential AI Use Found",
+			description="An individual has reported this message for the usage of AI.\n"
+						"This server has NO tolerance of any AI Generated Content (Rule 8) and has been alerted to staff.\n\n"
+						"-# ***Repeated usage of AI will result in harsher punishments.***"
+		))
 	
-			await i.response.send_message("Potential Reporting has been Logged.", ephemeral=True)
+		await i.response.send_message("Potential Reporting has been Logged.", ephemeral=True)

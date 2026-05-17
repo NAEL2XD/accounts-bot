@@ -2,9 +2,7 @@ import os
 import sys
 import json
 import time
-import utils
 import consts
-import asyncio
 import aiohttp
 import nextcord
 import traceback
@@ -50,10 +48,12 @@ class AccountBot(slashcmds.Bot):
 			os.replace(tmpPath, dataPath)
 			self.SAVE_OUTDATED = False
 
-	@tasks.loop(minutes=1)
+	@tasks.loop(minutes=3)
 	async def autoSet(self):
+		hours, remainder = divmod(time.time() - self.LAST_ONLINE, 3600)
+		minutes, seconds = divmod(remainder, 60)
 		await self.change_presence(
-			activity=nextcord.Game(f"UPTIME: {utils.formatToTimeAgo(time.time() - self.LAST_ONLINE)}"),
+			activity=nextcord.Game(f"UPTIME: {hours} hours, {minutes} minutes, {seconds} seconds"),
 			status=nextcord.Status.do_not_disturb
 		)
 
@@ -139,9 +139,9 @@ class AccountBot(slashcmds.Bot):
 			with open("data/users.json", "r") as f:
 				self.USER_DATA = {int(key): UserData(value) for key, value in dict(json.load(f)).items()}
 
-		utils.touch("commit.txt")
-		with open("data/commit.txt", "r") as f:
-			self.CUR_COMMIT = f.read()
+		if os.path.exists("data/commit.txt"):
+			with open("data/commit.txt", "r") as f:
+				self.CUR_COMMIT = f.read()
 
 	async def on_ready(self):
 		print(f"Logged on as {self.user}!")
@@ -170,7 +170,7 @@ class AccountBot(slashcmds.Bot):
 				f"Hey {member.name}, thanks for joining Account's Folder\n\n"
 				"You're seeing this DM because your account is **NOT** old enough to join Account's Folder\n\n"
 				f"Your account's creation is `{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}` (`{days} days`), "
-				"while Account's Folder requires all users to be more than 14 days old.\n\n"
+				"when Account's Folder requires all users to be more than 14 days old.\n\n"
 				f"Wait about `{round((consts.FOURTEEN_DAYS - age) / 86400, 1)} days` to be able to access this server again!\n\n"
 				"-# p.s. If that time is up, you can rejoin this server (https://discord.gg/dsRUP9MAxY)\n"
 				"-# Oh and DON'T FLOOD OUR LOGS!!!",
@@ -235,7 +235,7 @@ class AccountBot(slashcmds.Bot):
 		os.remove("data/exception.txt")
 
 if __name__ == "__main__":
-	import commands
+	from commands import BotCommands
 	self = AccountBot(intents=nextcord.Intents.all())
-	self.add_cog(commands.BotCommands(self))
+	self.add_cog(BotCommands(self))
 	self.run(sys.argv[1])
