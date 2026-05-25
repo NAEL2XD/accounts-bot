@@ -46,6 +46,7 @@ class BotCommands(commands.Cog):
 			await i.response.send_message(f"# Detailed Help about the command `/{command}`:\n\n{f.read()}")
 
 	@nextcord.slash_command(description="Bomb someone else or just yourself!", integration_types=[0, 1], contexts=[0, 1, 2])
+	@cooldown(10)
 	async def bomb(
 		self,
 		i:nextcord.Interaction,
