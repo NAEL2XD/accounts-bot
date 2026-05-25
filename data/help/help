@@ -4,6 +4,7 @@ If the user specified a command (for example: `/help help`), this will return th
 
 ## Arguments:
 `/help <Command<ChoiceString>>`
+> `Command` - The string to pick from the provided choices.
 
 ## Example Usage:
 ```

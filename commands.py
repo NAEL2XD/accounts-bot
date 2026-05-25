@@ -20,7 +20,7 @@ def cooldown(seconds:float):
 			left = user.cmdTimestamp - time.time() + seconds
 			if left < 0:
 				user.cmdTimestamp = time.time()
-				return await func(self=self, i=i, *args, **kwargs)
+				return await func(self, i, *args, **kwargs)
 
 			return await i.response.send_message(
 				f"You are using this command way too quickly! Please wait about `{round(left, 2)} seconds` to run this command again, or wait until my message gets deleted automatically.",
@@ -33,7 +33,7 @@ class BotCommands(commands.Cog):
 	def __init__(self, bot:AccountBot):
 		self.bot = bot
 
-	@nextcord.slash_command(description="Shows the current Help Command.")
+	@nextcord.slash_command(description="Shows the current Help Command.", integration_types=[0, 1], contexts=[0, 1, 2])
 	async def help(
 		self,
 		i:nextcord.Interaction,
@@ -45,8 +45,7 @@ class BotCommands(commands.Cog):
 		with open(f"data/help/{command}", "r") as f:
 			await i.response.send_message(f"# Detailed Help about the command `/{command}`:\n\n{f.read()}")
 
-	@nextcord.slash_command(description="Bomb someone else or just yourself!")
-	@cooldown(20)
+	@nextcord.slash_command(description="Bomb someone else or just yourself!", integration_types=[0, 1], contexts=[0, 1, 2])
 	async def bomb(
 		self,
 		i:nextcord.Interaction,
@@ -59,10 +58,9 @@ class BotCommands(commands.Cog):
 			required=False
 		)
 	):
-		if not (i.user and isinstance(i.user, nextcord.Member)):
+		if not i.user:
 			return
-
-		if leaderboard:
+		elif leaderboard:
 			self.bot.getDataFromMember(i.user).cmdTimestamp = 0
 
 			sender = "## Bombed Rankings:\n"
@@ -97,7 +95,7 @@ class BotCommands(commands.Cog):
 		await i.response.send_message(f"{user.mention} {sender} {':joy:' * increment}, user got bombed {target.bombed} times")
 		if target.bombed >= 5:
 			await achievement.unlock(self.bot, user, "Bomber Enthusiastic")
-		if increment >= 5:
+		if increment >= 5 and isinstance(i.user, nextcord.Member):
 			await achievement.unlock(self.bot, i.user, "Well Donexplosion")
 
 	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.")
@@ -118,7 +116,7 @@ class BotCommands(commands.Cog):
 
 		await i.response.send_message(sender)
 
-	@nextcord.slash_command(description="Shows information about this custom bot.")
+	@nextcord.slash_command(description="Shows information about this custom bot.", integration_types=[0, 1], contexts=[0, 1, 2])
 	async def about(self, i:nextcord.Interaction):
 		commit = "?"
 		if os.path.exists("data/commit.txt"):

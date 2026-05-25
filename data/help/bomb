@@ -8,6 +8,8 @@ If you want to view the leaderboard, you'll need to send this command: `/bomb nu
 
 ## Arguments:
 `/bomb (User<Member>) (Leaderboard<Boolean>)`
+> `User` - The member to specify and bomb them.
+> `Leaderboard` - Should open up the leaderboard instead? If true, disregards the `User` argument.
 
 ## Example Usage:
 ```
