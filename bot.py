@@ -39,8 +39,8 @@ class AccountBot(slashcmds.Bot):
 		return self.USER_DATA[member.id]
 
 	@tasks.loop(minutes=10)
-	async def autoSave(self):
-		if self.SAVE_OUTDATED:
+	async def autoSave(self, force:bool = False):
+		if self.SAVE_OUTDATED or force:
 			dataPath = "data/users.json"
 			tmpPath = f"{dataPath}.tmp"
 			with open(tmpPath, "w") as f:
@@ -71,28 +71,15 @@ class AccountBot(slashcmds.Bot):
 		if commit in [self.CUR_COMMIT, ""]:
 			return
 
-		self.SAVE_OUTDATED = True
 		self.autoSave.cancel()
-		await self.autoSave()
+		await self.autoSave(True)
 
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)
 
 		# yes its stupid but it works
 		with open("restart.sh", "w") as f:
-			f.write("\n".join([
-				'#!/bin/bash',
-				'if [ -d ".tmp" ]; then',
-				'	cd .tmp',
-				'	git pull origin main',
-				'	cd ..',
-				'else',
-				'	git clone https://github.com/NAEL2XD/accounts-bot.git .tmp',
-				'fi',
-				'cp -rf ./.tmp/. .',
-				'echo wait for start...',
-				f'~/env/bin/python bot.py "{sys.argv[1]}"'
-			]))
+			f.write(consts.RESTART_SCRIPT)
 
 		os.chmod("restart.sh", 0o755)
 		os.execvp("/bin/bash", ["bash", "restart.sh"])
@@ -133,8 +120,8 @@ class AccountBot(slashcmds.Bot):
 	#
 	# CURRENT CONFIG
 	#
-	def __init__(self, *, intents: nextcord.Intents) -> None:
-		super().__init__(intents=intents, default_guild_ids=None)
+	def __init__(self, *, intents:nextcord.Intents):
+		super().__init__(intents=intents)
 		if os.path.exists("data/users.json"):
 			with open("data/users.json", "r") as f:
 				self.USER_DATA = {int(key): UserData(value) for key, value in dict(json.load(f)).items()}
@@ -142,6 +129,8 @@ class AccountBot(slashcmds.Bot):
 		if os.path.exists("data/commit.txt"):
 			with open("data/commit.txt", "r") as f:
 				self.CUR_COMMIT = f.read()
+
+		self.description = "Hello, World!"
 
 	async def on_ready(self):
 		print(f"Logged on as {self.user}!")
@@ -207,9 +196,10 @@ class AccountBot(slashcmds.Bot):
 		userData = self.getDataFromMember(message.author)
 
 		# Honeypot
-		if message.channel.id == consts.HONEYPOT_ID and isinstance(message.author, nextcord.Member):
+		if message.channel.id == consts.HONEYPOT_ID and isinstance(message.author, nextcord.Member) and self.LOGS_CHANNEL:
 			userData.roleSave = [role.id for role in message.author.roles]
-			await message.author.kick(reason="User intentionally got hacked, or actually just got hacked!! Should have changed your Password.")
+			await message.author.ban(reason="User intentionally got hacked, or actually just got hacked!! Should have changed your Password.", delete_message_seconds=86400)
+			await message.author.unban()
 			await self.tryDM(
 				"## You've been HACKED!!\n\n"
 				"Either you got this by getting yourself (intentionally) hacked or just too curious to go to a channel that's for a honeypot.\n\n"
@@ -225,14 +215,26 @@ class AccountBot(slashcmds.Bot):
 		# Community Channel Checks
 		await self.voteHandler(message)
 
-	async def on_error(self, error):
+	async def handleErr(self, exception:str, send:str):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:
-			f.write(f"{traceback.format_exc()}")
+			f.write(exception)
 
 		user = self.get_user(consts.DEVELOPER_ID)
 		if user:
-			await user.send(f"New Exception Occurred!\nReason: `{error}`", file=nextcord.File("data/exception.txt", "exception.txt"))
+			await user.send(send, file=nextcord.File("data/exception.txt", "exception.txt"))
+
 		os.remove("data/exception.txt")
+
+	async def on_error(self, error):
+		await self.handleErr(traceback.format_exc(), f"# New Exception Occurred! - Reason: `{error}`")
+
+	async def on_application_command_error(self, interaction:nextcord.Interaction, exception:nextcord.ApplicationError):
+		await self.handleErr(
+			"\n".join(traceback.format_exception(type(exception), exception, exception.__traceback__)),
+			"# New Exception Occurred!\n"
+			f"- Reason: `{exception}`\n"
+			f"- Interaction: `{interaction.application_command}`"
+		)
 
 if __name__ == "__main__":
 	from commands import BotCommands

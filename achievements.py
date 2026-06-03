@@ -6,7 +6,7 @@ class Achievement:
 		self,
 		description:str,
 		roleID:int
-	) -> None:
+	):
 		self.description = description
 		self.roleID = roleID
 
@@ -26,6 +26,10 @@ ROLES = {
 }
 
 async def unlock(self:AccountBot, user:nextcord.Member, achievement:str, customString:str = ""):
+	g = self.get_guild(consts.GUILD_ID)
+	if not g or g.get_member(user.id) is None: # silently ignore if they're not on server
+		return
+
 	if not customString:
 		customString = f"Congratulations, You have gotten a new achievement: `{achievement}`\n\nYour role should be added in your profile, Hope you have fun!"
 

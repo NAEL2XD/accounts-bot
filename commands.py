@@ -1,4 +1,5 @@
 import os
+import json
 import time
 import heapq
 import consts
@@ -59,9 +60,7 @@ class BotCommands(commands.Cog):
 			required=False
 		)
 	):
-		if not i.user:
-			return
-		elif leaderboard:
+		if leaderboard:
 			self.bot.getDataFromMember(i.user).cmdTimestamp = 0
 
 			sender = "## Bombed Rankings:\n"
@@ -84,7 +83,7 @@ class BotCommands(commands.Cog):
 
 		sender = "get bombed you bozo"
 		for condition, message in funnies.items():
-			if increment > condition:
+			if increment >= condition:
 				sender = message.format(increment)
 			else:
 				break
@@ -138,11 +137,16 @@ class BotCommands(commands.Cog):
 		if not (isinstance(user, nextcord.Member) and self.bot.LOGS_CHANNEL):
 			return
 
+		with open("data/ai.json", "w", encoding="utf-8") as f:
+			json.dump(message, f, indent="\t")
+
 		await self.bot.LOGS_CHANNEL.send(
 			"## ⚠️ Potential Usage of AI Reported!\n"
 			f"**Reporter**: {user.mention}\n"
 			f"**Message Link**: {message.jump_url}\n"
-			f"-# <@&{consts.MOD_ROLE}> <@&{consts.ADMIN_ROLE}>"
+			f"-# <@&{consts.MOD_ROLE}> <@&{consts.ADMIN_ROLE}>\n\n"
+			"Extra information:",
+			file=nextcord.File("data/ai.json")
 		)
 
 		await message.reply(embed=nextcord.Embed(
@@ -154,3 +158,10 @@ class BotCommands(commands.Cog):
 		))
 	
 		await i.response.send_message("Potential Reporting has been Logged.", ephemeral=True)
+
+	@nextcord.message_command(guild_ids=[1126244249076244571])
+	async def shutdown(self, i:nextcord.Interaction):
+		self.bot.autoSave.cancel()
+		await self.bot.autoSave()
+		await i.response.send_message("Shutting down...")
+		exit(0)
