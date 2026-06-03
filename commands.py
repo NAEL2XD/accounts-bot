@@ -137,16 +137,11 @@ class BotCommands(commands.Cog):
 		if not (isinstance(user, nextcord.Member) and self.bot.LOGS_CHANNEL):
 			return
 
-		with open("data/ai.json", "w", encoding="utf-8") as f:
-			json.dump(message, f, indent="\t")
-
 		await self.bot.LOGS_CHANNEL.send(
 			"## ⚠️ Potential Usage of AI Reported!\n"
 			f"**Reporter**: {user.mention}\n"
 			f"**Message Link**: {message.jump_url}\n"
-			f"-# <@&{consts.MOD_ROLE}> <@&{consts.ADMIN_ROLE}>\n\n"
-			"Extra information:",
-			file=nextcord.File("data/ai.json")
+			f"-# <@&{consts.MOD_ROLE}> <@&{consts.ADMIN_ROLE}>"
 		)
 
 		await message.reply(embed=nextcord.Embed(
