@@ -19,7 +19,7 @@ RESTART_SCRIPT = f"""
 #!/bin/bash
 
 # Delete our help folder due to updates in there.
-rm -f data/help
+rm -r data/help
 
 # Git cloning handler...
 if [ -d ".tmp" ]; then

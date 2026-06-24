@@ -1,0 +1,15 @@
+Pins a message specified on your owned Forum Post
+
+This also handles:
+- ***Unpinning*** - If a message is pinned before, Trigger that command again to unpin that message.
+- ***OP Checking*** - Only pins the message if the OP requested it, not everybody else.
+
+## Arguments:
+Pin Message does not have any arguments, just hover the message and click, that's it.
+
+## Example Usage:
+```
+> *Message looks something worthy of being pinned...*
+> >Pin Message
+>> Done.
+```
