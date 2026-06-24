@@ -1,5 +1,4 @@
 import os
-import json
 import time
 import heapq
 import consts
@@ -98,7 +97,7 @@ class BotCommands(commands.Cog):
 		if increment >= 5 and isinstance(i.user, nextcord.Member):
 			await achievement.unlock(self.bot, i.user, "Well Donexplosion")
 
-	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.")
+	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.", guild_ids=[consts.GUILD_ID])
 	async def achievements(self, i:nextcord.Interaction):
 		if not (i.guild and isinstance(i.user, nextcord.Member)):
 			return
@@ -131,7 +130,7 @@ class BotCommands(commands.Cog):
 				"[*Source Code*](https://github.com/NAEL2XD/accounts-bot) • [*Made by Nael2xd*](<https://discord.com/users/786639413282209802>)",
 		))
 
-	@nextcord.message_command("Warn AI Usage")
+	@nextcord.message_command("Warn AI Usage", guild_ids=[consts.GUILD_ID])
 	async def warnAI(self, i:nextcord.Interaction, message:nextcord.Message):
 		user = i.user
 		if not (isinstance(user, nextcord.Member) and self.bot.LOGS_CHANNEL):
@@ -153,6 +152,19 @@ class BotCommands(commands.Cog):
 		))
 	
 		await i.response.send_message("Potential Reporting has been Logged.", ephemeral=True)
+
+	@nextcord.message_command("Pin Message", guild_ids=[consts.GUILD_ID])
+	async def pinMessage(self, i:nextcord.Interaction, message:nextcord.Message):
+		try:
+			assert i.channel and isinstance(i.user, nextcord.Member), "Not a valid channel or member"
+			assert isinstance(i.channel, nextcord.Thread) and isinstance(i.channel.parent, nextcord.ForumChannel), "This command must be used inside a forum post"
+			assert i.channel.category_id == consts.COMMUNITY_ID, "This command must be used in the #COMMUNITY channel"
+			assert i.channel.owner_id == i.user.id, "You do not own this forum post"
+		except AssertionError as asrt:
+			return await i.response.send_message(f"{asrt}!", ephemeral=True)
+
+		await (message.unpin if message.pinned else message.pin)()
+		await i.response.send_message("Done.", ephemeral=True)
 
 	@nextcord.message_command(guild_ids=[1126244249076244571])
 	async def shutdown(self, i:nextcord.Interaction):
