@@ -6,7 +6,7 @@ import consts
 import aiohttp
 import nextcord
 import traceback
-from typing import Union
+from typing import Union, Optional
 from nextcord.ext import tasks, commands as slashcmds
 
 if __name__ == "__main__":
@@ -19,14 +19,15 @@ class UserData:
 		self.roleSave:list[int] = []
 		self.bombed:int = 0
 		self.cmdTimestamp:float = 0
+		self.userJoinStamp:Optional[float] = None
 
-		for key in self.__dict__.keys():
-			if key in data and isinstance(data[key], type(self.__dict__[key])):
-				self.__dict__[key] = data[key]
+		for key, value in self.__dict__.items():
+			if key in data and isinstance(data[key], type(value)):
+				value = data[key]
 
 class AccountBot(slashcmds.Bot):
 	USER_DATA:dict[int, UserData] = {}
-	LOGS_CHANNEL:nextcord.TextChannel|None = None
+	LOGS_CHANNEL:Optional[nextcord.TextChannel] = None
 	SAVE_OUTDATED = False
 	LAST_ONLINE = 0.0
 	CUR_COMMIT = ""
@@ -57,6 +58,15 @@ class AccountBot(slashcmds.Bot):
 			status=nextcord.Status.do_not_disturb
 		)
 
+		for userID, userData in self.USER_DATA.items():
+			if userData.userJoinStamp == None or time.time() - userData.userJoinStamp < consts.MINIMUM_AGE:
+				return
+
+			guild = self.get_guild(consts.GUILD_ID)
+			if guild:
+				await guild.unban(nextcord.Object(userID))
+				userData.userJoinStamp = None
+
 	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
 		commit = ""
@@ -77,7 +87,6 @@ class AccountBot(slashcmds.Bot):
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)
 
-		# yes its stupid but it works
 		with open("restart.sh", "w") as f:
 			f.write(consts.RESTART_SCRIPT)
 
@@ -151,18 +160,19 @@ class AccountBot(slashcmds.Bot):
 				self.LOGS_CHANNEL = logs
 
 	async def on_member_join(self, member:nextcord.Member):
-		age = time.time() - member.created_at.timestamp()
-		if age < consts.FOURTEEN_DAYS:
+		mem = self.getDataFromMember(member)
+		mem.userJoinStamp = member.created_at.timestamp()
+		age = time.time() - mem.userJoinStamp
+		if age < consts.MINIMUM_AGE:
 			days = round(age / 86400, 1)
-			await member.kick(reason=f"Not old enough to join this server ({days} days old)")
+			await member.ban(reason=f"Not old enough to join this server ({days} days old)")
 			await self.tryDM(
 				f"Hey {member.name}, thanks for joining Account's Folder\n\n"
 				"You're seeing this DM because your account is **NOT** old enough to join Account's Folder\n\n"
 				f"Your account's creation is `{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}` (`{days} days`), "
 				"when Account's Folder requires all users to be more than 14 days old.\n\n"
-				f"Wait about `{round((consts.FOURTEEN_DAYS - age) / 86400, 1)} days` to be able to access this server again!\n\n"
-				"-# p.s. If that time is up, you can rejoin this server (https://discord.gg/dsRUP9MAxY)\n"
-				"-# Oh and DON'T FLOOD OUR LOGS!!!",
+				f"Wait about `{round((consts.MINIMUM_AGE - age) / 86400, 1)} days` to be able to access this server again!\n\n"
+				"-# p.s. If time is up, you can rejoin this server (https://discord.gg/dsRUP9MAxY)\n",
 				member
 			)
 			return

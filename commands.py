@@ -82,7 +82,7 @@ class BotCommands(commands.Cog):
 
 		sender = "get bombed you bozo"
 		for condition, message in funnies.items():
-			if increment >= condition:
+			if increment > condition:
 				sender = message.format(increment)
 			else:
 				break
