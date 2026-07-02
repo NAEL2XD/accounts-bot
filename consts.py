@@ -1,7 +1,7 @@
 from sys import argv
 
 REPO_COMMIT_API = "https://api.github.com/repos/NAEL2XD/accounts-bot/commits"
-MINIMUM_AGE = 1209600
+MINIMUM_AGE = 14 * 24 * 60 * 60
 
 COMMUNITY_ID = 1208732034340487208
 DEVELOPER_ID = 786639413282209802

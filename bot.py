@@ -64,7 +64,9 @@ class AccountBot(slashcmds.Bot):
 
 			guild = self.get_guild(consts.GUILD_ID)
 			if guild:
-				await guild.unban(nextcord.Object(userID))
+				user = await self.fetch_user(userID)
+				await guild.unban(user)
+				await self.tryDM("Psst, your time is up. You can join back by this user: https://discord.gg/dsRUP9MAxY", user)
 				userData.userJoinStamp = None
 
 	@tasks.loop(minutes=30)
@@ -172,7 +174,7 @@ class AccountBot(slashcmds.Bot):
 				f"Your account's creation is `{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}` (`{days} days`), "
 				"when Account's Folder requires all users to be more than 14 days old.\n\n"
 				f"Wait about `{round((consts.MINIMUM_AGE - age) / 86400, 1)} days` to be able to access this server again!\n\n"
-				"-# p.s. If time is up, you can rejoin this server (https://discord.gg/dsRUP9MAxY)\n",
+				f"-# You'll be DM'd when the time is up, which is <t:{int(time.time() + age)}:R>.",
 				member
 			)
 			return
@@ -225,6 +227,9 @@ class AccountBot(slashcmds.Bot):
 		# Community Channel Checks
 		await self.voteHandler(message)
 
+	#
+	# Error Handling
+	#
 	async def handleErr(self, exception:str, send:str):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:
 			f.write(exception)
