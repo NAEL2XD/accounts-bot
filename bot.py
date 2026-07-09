@@ -19,7 +19,6 @@ class UserData:
 		self.roleSave:list[int] = []
 		self.bombed:int = 0
 		self.cmdTimestamp:float = 0
-		self.userJoinStamp:Optional[float] = None
 
 		for key, value in self.__dict__.items():
 			if key in data and isinstance(data[key], type(value)):
@@ -57,17 +56,6 @@ class AccountBot(slashcmds.Bot):
 			activity=nextcord.Game(f"UPTIME: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"),
 			status=nextcord.Status.do_not_disturb
 		)
-
-		for userID, userData in self.USER_DATA.items():
-			if userData.userJoinStamp == None or time.time() - userData.userJoinStamp < consts.MINIMUM_AGE:
-				return
-
-			guild = self.get_guild(consts.GUILD_ID)
-			if guild:
-				user = await self.fetch_user(userID)
-				await guild.unban(user)
-				await self.tryDM("Psst, your time is up. You can join back by this user: https://discord.gg/dsRUP9MAxY", user)
-				userData.userJoinStamp = None
 
 	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
@@ -162,19 +150,17 @@ class AccountBot(slashcmds.Bot):
 				self.LOGS_CHANNEL = logs
 
 	async def on_member_join(self, member:nextcord.Member):
-		mem = self.getDataFromMember(member)
-		mem.userJoinStamp = member.created_at.timestamp()
-		age = time.time() - mem.userJoinStamp
+		age = time.time() - member.created_at.timestamp()
 		if age < consts.MINIMUM_AGE:
 			days = round(age / 86400, 1)
-			await member.ban(reason=f"Not old enough to join this server ({days} days old)")
+			await member.kick(reason=f"Not old enough to join this server ({days} days old)")
 			await self.tryDM(
 				f"Hey {member.name}, thanks for joining Account's Folder\n\n"
 				"You're seeing this DM because your account is **NOT** old enough to join Account's Folder\n\n"
 				f"Your account's creation is `{member.created_at.strftime("%d-%m-%Y %H:%M:%S")}` (`{days} days`), "
 				"when Account's Folder requires all users to be more than 14 days old.\n\n"
 				f"Wait about `{round((consts.MINIMUM_AGE - age) / 86400, 1)} days` to be able to access this server again!\n\n"
-				f"-# You'll be DM'd when the time is up, which is <t:{int(time.time() + age)}:R>.",
+				f"-# You can join back in this server if you're old enough: https://discord.gg/dsRUP9MAxY",
 				member
 			)
 			return
