@@ -11,18 +11,10 @@ class Achievement:
 		self.roleID = roleID
 
 ROLES = {
-	"Everyone Loves It": Achievement(
-		"Get 10 ⬆️ without someone ⬇️ing your post in #COMMUNITY",
-		consts.ELI_ROLE
-	),
-	"Bomber Enthusiastic": Achievement(
-		"Get bombed over 5 times, exploded into oblivion.",
-		consts.BE_ROLE
-	),
-	"Well Donexplosion": Achievement(
-		"Get lucky and make someone get bombed 5 times in 1 command, Abracadaboom!",
-		consts.WDP_ROLE
-	)
+	"Everyone Loves It":   Achievement("Get 10 ⬆️ without someone ⬇️ing your post in #COMMUNITY",                   consts.ELI_ROLE),
+	"Bomber Enthusiastic": Achievement("Get bombed over 5 times, exploded into oblivion.",                          consts.BE_ROLE),
+	"Well Donexplosion":   Achievement("Get lucky and make someone get bombed 5 times in 1 command, Abracadaboom!", consts.WDP_ROLE),
+	"You did it!":         Achievement("Find out that messaging can randomly get you an achievement, somehow.",     consts.YDI_ROLE)
 }
 
 async def unlock(self:AccountBot, user:nextcord.Member, achievement:str, customString:str = ""):

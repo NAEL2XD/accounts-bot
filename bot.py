@@ -3,6 +3,7 @@ import sys
 import json
 import time
 import consts
+import random
 import aiohttp
 import nextcord
 import traceback
@@ -212,6 +213,10 @@ class AccountBot(slashcmds.Bot):
 
 		# Community Channel Checks
 		await self.voteHandler(message)
+
+		# i was bored ok?
+		if random.random() >= 0.999 and isinstance(message.author, nextcord.Member):
+			await achievements.unlock(self, message.author, "You did it!", "your did it, you gain achievement")
 
 	#
 	# Error Handling
