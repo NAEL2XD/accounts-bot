@@ -126,7 +126,7 @@ class BotCommands(commands.Cog):
 			color=0x674CE4,
 			title=f"*`Account's rBot`* (Commit {commit})",
 			description=
-				"Account's rBot is a custom bot programmed for this server only. It provides utilities, moderation, and much more.\n"
+				"Account's rBot is a custom bot programmed for Account's Folder Server. It provides utilities, help stuff, and much more.\n"
 				"[*Source Code*](https://github.com/NAEL2XD/accounts-bot) • [*Made by Nael2xd*](<https://discord.com/users/786639413282209802>)",
 		))
 
@@ -158,7 +158,7 @@ class BotCommands(commands.Cog):
 		try:
 			assert i.channel and isinstance(i.user, nextcord.Member), "Not a valid channel or member"
 			assert isinstance(i.channel, nextcord.Thread) and isinstance(i.channel.parent, nextcord.ForumChannel), "This command must be used inside a forum post"
-			assert i.channel.category_id == consts.COMMUNITY_ID, "This command must be used in the #COMMUNITY channel"
+			assert i.channel.category_id in consts.COMMUNITY_IDS, "This command must be used in the #COMMUNITY channel"
 			assert i.channel.owner_id == i.user.id, "You do not own this forum post"
 		except AssertionError as asrt:
 			return await i.response.send_message(f"{asrt}!", ephemeral=True)

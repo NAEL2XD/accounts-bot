@@ -92,7 +92,7 @@ class AccountBot(slashcmds.Bot):
 
 	async def voteHandler(self, message:nextcord.Message):
 		if isinstance(message.channel, nextcord.TextChannel) and message.channel.category and \
-			isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id != consts.COMMUNITY_ID:
+			isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id not in consts.COMMUNITY_IDS:
 			return
 
 		media:nextcord.Attachment|None = None
@@ -101,20 +101,27 @@ class AccountBot(slashcmds.Bot):
 		elif message.snapshots and message.snapshots[0].attachments:
 			media = message.snapshots[0].attachments[0]
 
-		if (media and media.content_type or "").split("/", 1)[0].lower() in ["image", "video", "audio"]:
+		if (media and media.content_type or "").split("/", 1)[0].lower() in ["image", "video", "audio"] and isinstance(message.author, nextcord.Member):
 			emojiDict = {str(emoji): emoji.count for emoji in message.reactions if str(emoji) in ['⬆️', '⬇️'] and emoji.me}
 			for emoji in ["⬆️", "⬇️"]: # KeyError goes bye.
 				if emoji not in emojiDict:
 					await message.add_reaction(emoji)
 					emojiDict[emoji] = 1
 
-			if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1 and isinstance(message.author, nextcord.Member):
+			if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1:
 				await achievements.unlock(
 					self, message.author, "Everyone Loves It", 
 					"# Congratulations!!\n\n"
 					f"Your [post]({message.jump_url}) there was a massive success!\n\n"
 					"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
 					"Check your profile, it should be there now, and have fun with your new role!"
+				)
+			elif emojiDict["⬇️"] >= 10 and emojiDict["⬆️"] <= 1:
+				await achievements.unlock(
+					self, message.author, "Badly Performanted", 
+					f"Your [post]({message.jump_url}) is so trash even people has a brain and downvoted your post to oblivion.\n\n"
+					"Please, never ever post your garbage in a channel full of gorgeous artworks, never again.\n\n"
+					"As a result, you will get the shameful Badly Performanted role, you should be embarrassed for posting it."
 				)
 
 	#
@@ -129,8 +136,6 @@ class AccountBot(slashcmds.Bot):
 		if os.path.exists("data/commit.txt"):
 			with open("data/commit.txt", "r") as f:
 				self.CUR_COMMIT = f.read()
-
-		self.description = "Hello, World!"
 
 	async def on_ready(self):
 		print(f"Logged on as {self.user}!")
@@ -179,7 +184,7 @@ class AccountBot(slashcmds.Bot):
 
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
 		cID = self.get_channel(m.channel_id)
-		if not cID or not isinstance(cID, nextcord.TextChannel) or cID.category_id != consts.COMMUNITY_ID:
+		if not cID or not isinstance(cID, nextcord.TextChannel) or cID.category_id not in consts.COMMUNITY_IDS:
 			return
 
 		msg = await cID.fetch_message(m.message_id)
@@ -191,24 +196,6 @@ class AccountBot(slashcmds.Bot):
 		if isSelf or not isinstance(message.channel, nextcord.TextChannel):
 			if isinstance(message.channel, nextcord.DMChannel) and self.LOGS_CHANNEL and not isSelf: # not in account's folder but in a DM, so we send that to a channel
 				await (await message.forward(self.LOGS_CHANNEL)).reply(f"From {message.author.mention}")
-			return
-		userData = self.getDataFromMember(message.author)
-
-		# Honeypot
-		if message.channel.id == consts.HONEYPOT_ID and isinstance(message.author, nextcord.Member) and self.LOGS_CHANNEL:
-			userData.roleSave = [role.id for role in message.author.roles]
-			await message.author.ban(reason="User intentionally got hacked, or actually just got hacked!! Should have changed your Password.", delete_message_seconds=86400)
-			await message.author.unban()
-			await self.tryDM(
-				"## You've been HACKED!!\n\n"
-				"Either you got this by getting yourself (intentionally) hacked or just too curious to go to a channel that's for a honeypot.\n\n"
-				"If you *did* get hacked? CHANGE your password, ADD 2 Factor Authentification, "
-				"UNAUTHORIZE anything suspicious in your account (`User Settings > Devices & Authorised Apps`)\n\n"
-				"If you took all actions (or just became too curious), then you can join back this server @ https://discord.gg/dsRUP9MAxY\n\n"
-				"-# Oh and no, you're not banned.",
-				message.author
-			)
-			await message.delete()
 			return
 
 		# Community Channel Checks
