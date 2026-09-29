@@ -140,7 +140,7 @@ class BotCommands(commands.Cog):
 			"## ⚠️ Potential Usage of AI Reported!\n"
 			f"**Reporter**: {user.mention}\n"
 			f"**Message Link**: {message.jump_url}\n"
-			f"-# <@&{consts.MOD_ROLE}> <@&{consts.ADMIN_ROLE}>"
+			"-# <@&1483900217945231481> <@&1188212983940255824>"
 		)
 
 		await message.reply(embed=nextcord.Embed(

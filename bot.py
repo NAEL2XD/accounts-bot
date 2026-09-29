@@ -62,7 +62,7 @@ class AccountBot(slashcmds.Bot):
 	async def autoUpdate(self):
 		commit = ""
 		async with aiohttp.ClientSession() as session:
-			async with session.get(consts.REPO_COMMIT_API) as r:
+			async with session.get("https://api.github.com/repos/NAEL2XD/accounts-bot/commits") as r:
 				try:
 					r.raise_for_status()
 				except aiohttp.ClientResponseError:
@@ -151,7 +151,7 @@ class AccountBot(slashcmds.Bot):
 
 		guild = self.get_guild(consts.GUILD_ID)
 		if guild:
-			logs = guild.get_channel(consts.LOGS_ID)
+			logs = guild.get_channel(1179012815479115786)
 			if logs and isinstance(logs, nextcord.TextChannel):
 				self.LOGS_CHANNEL = logs
 
@@ -212,7 +212,7 @@ class AccountBot(slashcmds.Bot):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:
 			f.write(exception)
 
-		user = self.get_user(consts.DEVELOPER_ID)
+		user = self.get_user(786639413282209802)
 		if user:
 			await user.send(send, file=nextcord.File("data/exception.txt", "exception.txt"))
 
