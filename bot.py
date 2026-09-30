@@ -23,7 +23,7 @@ class UserData:
 
 		for key, value in self.__dict__.items():
 			if key in data and isinstance(data[key], type(value)):
-				value = data[key]
+				self.__dict__[ley] = data[key]
 
 class AccountBot(slashcmds.Bot):
 	USER_DATA:dict[int, UserData] = {}
