@@ -190,7 +190,8 @@ class BotCommands(commands.Cog):
 			required=False
 		)
 	):
-		path = file and file.url or url
+		fileMode = file is not None
+		path = fileMode and file.url or url
 		if not path:
 			return await i.response.send_message("File or URL not Provided and therefore cannot be done.", ephemeral=True)
 
@@ -200,7 +201,7 @@ class BotCommands(commands.Cog):
 				if resp.status != 200:
 					return await i.response.send_message(f"Status received HTTP Error {resp.status}, cannot be done.", ephemeral=True)
 
-				size = int(resp.headers.get("content-length") or 0x80000000)
+				size = fileMode and file.size or int(resp.headers.get("content-length", 0x80000000))
 				if size > 0x7FFFFFFF:
 					return await i.response.send_message(f"Sorry! I can't handle large JSONs (your JSON size is {size} while i only accept 2GB!).", ephemeral=True)
 
