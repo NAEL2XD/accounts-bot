@@ -1,5 +1,9 @@
 import consts
-from bot import nextcord, AccountBot
+import nextcord
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+	from bot import AccountBot
 
 class Achievement:
 	def __init__(
@@ -14,11 +18,10 @@ ROLES = {
 	"Everyone Loves It":   Achievement("Make a awesome post in #COMMUNITY and get 10 ⬆️ (if no one downvotes, bot excluded.)", 1473009251399110687),
 	"Bomber Enthusiastic": Achievement("Get bombed over 5 times, exploded into oblivion.",                                     1475909457270804653),
 	"Well Donexplosion":   Achievement("Get lucky and make someone get bombed 5 times in 1 command, Abracadaboom!",            1505569438618091520),
-	"You did it!":         Achievement("Find out that messaging can randomly get you an achievement, somehow.",                1534330974807130172),
-	"Badly Performanted":  Achievement("Make a shitty post in #COMMUNITY and get 10 ⬇️. This goes to the dumpster.",           1554183381573439488)
+	"You did it!":         Achievement("Find out that messaging can randomly get you an achievement, somehow.",                1534330974807130172)
 }
 
-async def unlock(self:AccountBot, user:nextcord.Member, achievement:str, customString:str = ""):
+async def unlock(self:"AccountBot", user:nextcord.Member, achievement:str, customString:str = ""):
 	g = self.get_guild(consts.GUILD_ID)
 	if not g or g.get_member(user.id) is None: # silently ignore if they're not on server
 		return

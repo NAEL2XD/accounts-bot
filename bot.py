@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import os
 import sys
 import json
@@ -7,11 +9,11 @@ import random
 import aiohttp
 import nextcord
 import traceback
+import achievements
+from tasks import Task
+from commands import BotCommands
 from typing import Union, Optional
-from nextcord.ext import tasks, commands as slashcmds
-
-if __name__ == "__main__":
-	import achievements
+from nextcord.ext import tasks, commands
 
 Member = Union[nextcord.User, nextcord.Member]
 
@@ -25,12 +27,19 @@ class UserData:
 			if key in data and isinstance(data[key], type(value)):
 				self.__dict__[key] = data[key]
 
-class AccountBot(slashcmds.Bot):
+class AccountBot(commands.Bot):
 	USER_DATA:dict[int, UserData] = {}
 	LOGS_CHANNEL:Optional[nextcord.TextChannel] = None
 	SAVE_OUTDATED = False
 	LAST_ONLINE = 0.0
 	CUR_COMMIT = ""
+
+	TASKS:list[Task] = []
+
+	@tasks.loop(seconds=1)
+	async def taskLoop(self):
+		if self.TASKS:
+			await self.TASKS.pop()._startTask()
 
 	# BOT UTILITIES
 	def getDataFromMember(self, member:Member) -> UserData:
@@ -116,13 +125,6 @@ class AccountBot(slashcmds.Bot):
 					"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
 					"Check your profile, it should be there now, and have fun with your new role!"
 				)
-			elif emojiDict["⬇️"] >= 10 and emojiDict["⬆️"] <= 1:
-				await achievements.unlock(
-					self, message.author, "Badly Performanted", 
-					f"Your [post]({message.jump_url}) is so trash even people has a brain and downvoted your post to oblivion.\n\n"
-					"Please, never ever post your garbage in a channel full of gorgeous artworks, never again.\n\n"
-					"As a result, you will get the shameful Badly Performanted role, you should be embarrassed for posting it."
-				)
 
 	#
 	# CURRENT CONFIG
@@ -137,6 +139,8 @@ class AccountBot(slashcmds.Bot):
 			with open("data/commit.txt", "r") as f:
 				self.CUR_COMMIT = f.read()
 
+		os.makedirs("data/ids", exist_ok=True)
+
 	async def on_ready(self):
 		print(f"Logged on as {self.user}!")
 		self.LAST_ONLINE = time.time()
@@ -144,6 +148,7 @@ class AccountBot(slashcmds.Bot):
 		try:
 			self.autoSave.start()
 			self.autoSet.start()
+			self.taskLoop.start()
 			if os.getenv("D_TESTING") != "1":
 				self.autoUpdate.start()
 		except RuntimeError:
@@ -230,7 +235,6 @@ class AccountBot(slashcmds.Bot):
 		)
 
 if __name__ == "__main__":
-	from commands import BotCommands
 	self = AccountBot(intents=nextcord.Intents.all())
 	self.add_cog(BotCommands(self))
 	self.run(sys.argv[1])

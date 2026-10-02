@@ -1,0 +1,27 @@
+Converts a FNF' Psych Engine JSON to any format that is supported.
+
+Do note that currently some are supported, but more will arrive soon if engineered thorough.
+
+Currently Supported Formats:
+- **Add Yourself Singing (AYS | Scratch)**
+
+**This is a Task Function, you will need to have DMs enabled for it to be available.**
+
+## Arguments:
+`/tasks-fnf2any chartformat<ChoiceString> url<Optional<String>> file<Optional<DiscordFile>>`
+- `chartformat` *REQUIRED* - Choices of Formats that is currently supported.
+- `url` - Optional URL to grab and download.
+- `file` - Discord File to download.
+
+### IF `url` AND `file` IS EMPTY, THIS WILL NOT BE PROCESSED.
+
+### `file` IS THE FIRST PRIORITY (checks first)
+
+## Example Usage:
+```
+> /tasks-fnf2any "Add Yourself Singing.txt" https://my.url/psych.json
+*tasks received*
+>> DM: Here is your converted file: https://output.file/1.txt
+
+*and more examples*
+```

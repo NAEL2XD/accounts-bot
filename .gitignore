@@ -1,3 +1,4 @@
+.tmp
 .secret
 main.py
 __pycache__
@@ -8,6 +9,8 @@ data/exception.txt
 data/users.json
 data/users.json.tmp
 data/commit.txt
+data/id.txt
+data/ids*
 
 # misc
 out.txt

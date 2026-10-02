@@ -1,18 +1,23 @@
 import os
 import time
 import heapq
+import tasks
 import consts
 import random
+import aiohttp
 import nextcord
-import achievements as achievement
-from bot import AccountBot
+import achievements
 from functools import wraps
+from typing import TYPE_CHECKING 
 from nextcord.ext import commands
+
+if TYPE_CHECKING:                  # <-- ADD THIS BLOCK
+	from bot import AccountBot
 
 def cooldown(seconds:float):
 	def decorator(func):
 		@wraps(func)
-		async def wrapper(self:'BotCommands', i:nextcord.Interaction, *args, **kwargs):
+		async def wrapper(self:"BotCommands", i:nextcord.Interaction, *args, **kwargs):
 			if not i.user:
 				return
 
@@ -30,7 +35,7 @@ def cooldown(seconds:float):
 	return decorator
 
 class BotCommands(commands.Cog):
-	def __init__(self, bot:AccountBot):
+	def __init__(self, bot:"AccountBot"):
 		self.bot = bot
 
 	@nextcord.slash_command(description="Shows the current Help Command.", integration_types=[0, 1], contexts=[0, 1, 2])
@@ -93,9 +98,9 @@ class BotCommands(commands.Cog):
 
 		await i.response.send_message(f"{user.mention} {sender} {':joy:' * increment}, user got bombed {target.bombed} times")
 		if target.bombed >= 5:
-			await achievement.unlock(self.bot, user, "Bomber Enthusiastic")
+			await achievements.unlock(self.bot, user, "Bomber Enthusiastic")
 		if increment >= 5 and isinstance(i.user, nextcord.Member):
-			await achievement.unlock(self.bot, i.user, "Well Donexplosion")
+			await achievements.unlock(self.bot, i.user, "Well Donexplosion")
 
 	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.", guild_ids=[consts.GUILD_ID])
 	async def achievements(self, i:nextcord.Interaction):
@@ -104,7 +109,7 @@ class BotCommands(commands.Cog):
 
 		sender = "# ACHIEVEMENTS:\n"
 		members = i.guild.member_count or 1
-		for name, data in achievement.ROLES.items():
+		for name, data in achievements.ROLES.items():
 			role = i.guild.get_role(data.roleID)
 			if role:
 				totalWithRole = len(role.members)
@@ -166,9 +171,41 @@ class BotCommands(commands.Cog):
 		await (message.unpin if message.pinned else message.pin)()
 		await i.response.send_message("Done.", ephemeral=True)
 
-	@nextcord.message_command(guild_ids=[1126244249076244571])
-	async def shutdown(self, i:nextcord.Interaction):
-		self.bot.autoSave.cancel()
-		await self.bot.autoSave()
-		await i.response.send_message("Shutting down...")
-		exit(0)
+	@nextcord.slash_command(name="tasks-fnf2any", description="Converts a Psych Engine JSON to another format.")
+	@tasks.mode()
+	async def tasks_fnf2any(
+		self,
+		i:nextcord.Interaction,
+		chartformat:str = nextcord.SlashOption(
+			description="The format supported to convert as.", 
+			required=True,
+			choices=["Add Yourself Singing.txt"]
+		),
+		url:str = nextcord.SlashOption(
+			description="Path to URL of a compatible Psych Engine JSON (RAW ONLY!).", 
+			required=False
+		),
+		file:nextcord.Attachment = nextcord.SlashOption(
+			description="File to a compatible Psych Engine JSON. (high priority)", 
+			required=False
+		)
+	):
+		path = file and file.url or url
+		if not path:
+			return await i.response.send_message("File or URL not Provided and therefore cannot be done.", ephemeral=True)
+
+		task = tasks.FNFConverter(self, i.user, chartformat)
+		async with aiohttp.ClientSession() as session:
+			async with session.get(path) as resp:
+				if resp.status != 200:
+					return await i.response.send_message(f"Status received HTTP Error {resp.status}, cannot be done.", ephemeral=True)
+
+				size = int(resp.headers.get("content-length") or 0x80000000)
+				if size > 0x7FFFFFFF:
+					return await i.response.send_message(f"Sorry! I can't handle large JSONs (your JSON size is {size} while i only accept 2GB!).", ephemeral=True)
+
+				with open(task.filename, "wb") as f:
+					async for line in resp.content.iter_chunked(8192):
+						f.write(line)
+
+		return task
