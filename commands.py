@@ -11,7 +11,7 @@ from functools import wraps
 from typing import TYPE_CHECKING 
 from nextcord.ext import commands
 
-if TYPE_CHECKING:                  # <-- ADD THIS BLOCK
+if TYPE_CHECKING:
 	from bot import AccountBot
 
 def cooldown(seconds:float):

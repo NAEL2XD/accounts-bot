@@ -66,7 +66,8 @@ class Task:
 					"# Task is successfully done!\n\n"
 					f"Your Task ID `{self.id}` is finished without any errors, and has took `{round(time.time() - old, 4)}` seconds to finish.\n\n"
 					f"The file is available in this URL: {url}\n"
-					"-# Do note that this file CAN be deleted randomly in that server but its unlikely unless it is running out of space."
+					"-# Do note that this file CAN be deleted randomly in that server but its unlikely unless it is running out of space.\n"
+					"-# Why not *Discord?* Due to its limited size, it would probably cause errors, so that's why this URL is used."
 				)
 				return
 			else:
@@ -75,7 +76,7 @@ class Task:
 			reason = f"Exception Occurred!\n\n{traceback.format_exc()}"
 
 		await self.target.send(
-			"### Task has gotten errors!\n\n"
+			"# Task has gotten errors!\n\n"
 			f"Your Task ID `{self.id}` has received errors and has stopped.\n\n"
 			f"```\n{reason}\n```\n\n"
 			"Please fix on what you're doing!"
