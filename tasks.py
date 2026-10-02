@@ -106,10 +106,10 @@ class FNFConverter(Task):
 					out.append((notes[0], (notes[1] + hit) % 8, notes[2]))
 			out.sort(key=lambda x: x[0])
 
-			with open(".tmp", "w") as f:
+			with open("convert.tmp", "w") as f:
 				for time, direction, length in out:
 					f.write(self.func(time, direction, length))
-			os.rename(".tmp", f"../Site/start/rBot/{self.id}.{self.extension}")
+			os.rename("convert.tmp", f"../Site/start/rBot/{self.id}.{self.extension}")
 
 			return True, f"https://n2xd.dedyn.io/rBot/{self.id}.{self.extension}"
 		except Exception as e:
