@@ -198,8 +198,7 @@ class BotCommands(commands.Cog):
 		task = tasks.FNFConverter(self, i.user, chartformat)
 		async with aiohttp.ClientSession() as session:
 			async with session.get(path) as resp:
-				if resp.status != 200:
-					return await i.response.send_message(f"Status received HTTP Error {resp.status}, cannot be done.", ephemeral=True)
+				resp.raise_for_status()
 
 				size = fileMode and file.size or int(resp.headers.get("content-length", 0x80000000))
 				if size > 0x7FFFFFFF:

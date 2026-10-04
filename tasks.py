@@ -6,7 +6,7 @@ import traceback
 from functools import wraps
 from typing import Callable, TYPE_CHECKING
 
-if TYPE_CHECKING:                           # <-- ADD THIS BLOCK
+if TYPE_CHECKING:
 	from commands import BotCommands
 
 def mode():
@@ -19,8 +19,7 @@ def mode():
 			try:
 				await i.user.create_dm()
 			except nextcord.Forbidden:
-				await i.response.send_message("You must have DMs enabled to use Tasks.", ephemeral=True)
-				return
+				return await i.response.send_message("You must have DMs enabled to use Tasks.", ephemeral=True)
 
 			try:
 				task = await func(self, i, *args, **kwargs)
@@ -59,6 +58,8 @@ class Task:
 	async def _startTask(self):
 		reason = ""
 		try:
+			await self.target.send(f"Task ID `{self.id}` is started, this may take a while depending on how long it is.")
+
 			old = time.time()
 			success, url = await self.start()
 			if success:
@@ -70,8 +71,7 @@ class Task:
 					"-# Why not *Discord?* Due to its limited size, it would probably cause errors, so that's why this URL is used."
 				)
 				return
-			else:
-				reason = f"Task Failed due to this error: {url}"
+			reason = f"Task Failed due to this error: {url}"
 		except Exception:
 			reason = f"Exception Occurred!\n\n{traceback.format_exc()}"
 
@@ -85,20 +85,22 @@ class Task:
 class FNFConverter(Task):
 	def __init__(self, bot:"BotCommands", i, chartFormat:str):
 		super().__init__(bot, i)
-		typeof, self.extension = chartFormat.split(".", 1)
+		typeof, self.extension = os.path.splitext(chartFormat)
 		self.filename = f"data/ids/{self.id}.txt"
 		self.func:Callable[[float, int, float], str] = {
-			"Add Yourself Singing": lambda time, direction, length: f"{{{round(time / 1000, 7)}}}: {{{direction}}}: {{{length}}}\n"
+			"Add Yourself Singing": lambda time, direction, length: f"{{{round(time / 1000, 7)}}}: {{{direction}}}: {{{length}}}"
 		}[typeof]
 
 	async def start(self) -> tuple[bool, str]:
 		try:
 			with open(self.filename, "r") as f:
 				serialized = json.load(f)
-				if "song" not in serialized:
-					raise ValueError("Not a Psych Engine Format.")
-				elif isinstance(serialized["song"], dict):
-					serialized = serialized["song"]
+			os.remove(self.filename)
+
+			if "song" not in serialized:
+				raise ValueError("Not a Psych Engine Format.")
+			elif isinstance(serialized["song"], dict):
+				serialized = serialized["song"]
 
 			out:list[tuple[float, int, float]] = []
 			for section in serialized["notes"]:
@@ -109,9 +111,10 @@ class FNFConverter(Task):
 
 			with open("convert.tmp", "w") as f:
 				for time, direction, length in out:
-					f.write(self.func(time, direction, length))
-			os.rename("convert.tmp", f"../Site/start/rBot/{self.id}.{self.extension}")
+					f.write(f"{self.func(time, direction, length)}\n")
+			os.replace("convert.tmp", f"../Site/start/rBot/{self.id}.{self.extension}")
 
+			del out
 			return True, f"https://n2xd.dedyn.io/rBot/{self.id}.{self.extension}"
 		except Exception as e:
 			os.remove(self.filename)

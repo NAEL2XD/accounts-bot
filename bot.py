@@ -28,13 +28,10 @@ class UserData:
 				self.__dict__[key] = data[key]
 
 class AccountBot(commands.Bot):
-	USER_DATA:dict[int, UserData] = {}
 	LOGS_CHANNEL:Optional[nextcord.TextChannel] = None
-	SAVE_OUTDATED = False
-	LAST_ONLINE = 0.0
-	CUR_COMMIT = ""
-
+	USER_DATA:dict[int, UserData] = {}
 	TASKS:list[Task] = []
+	CUR_COMMIT = ""
 
 	@tasks.loop(seconds=1)
 	async def taskLoop(self):
@@ -43,28 +40,34 @@ class AccountBot(commands.Bot):
 
 	# BOT UTILITIES
 	def getDataFromMember(self, member:Member) -> UserData:
-		self.SAVE_OUTDATED = True
 		if member.id not in self.USER_DATA:
 			self.USER_DATA[member.id] = UserData()
 		return self.USER_DATA[member.id]
 
 	@tasks.loop(minutes=10)
-	async def autoSave(self, force:bool = False):
-		if self.SAVE_OUTDATED or force:
-			dataPath = "data/users.json"
-			tmpPath = f"{dataPath}.tmp"
-			with open(tmpPath, "w") as f:
-				json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
-			os.replace(tmpPath, dataPath)
-			self.SAVE_OUTDATED = False
+	async def autoSave(self):
+		dataPath = "data/users.json"
+		tmpPath = f"{dataPath}.tmp"
+		with open(tmpPath, "w") as f:
+			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
+		os.replace(tmpPath, dataPath)
 
-	@tasks.loop(minutes=3)
-	async def autoSet(self):
-		hours, remainder = divmod(time.time() - self.LAST_ONLINE, 3600)
-		minutes, seconds = divmod(remainder, 60)
 		await self.change_presence(
-			activity=nextcord.Game(f"UPTIME: {int(hours)} hours, {int(minutes)} minutes, {int(seconds)} seconds"),
-			status=nextcord.Status.do_not_disturb
+			activity=nextcord.CustomActivity(
+				name=random.choice([
+					"Made by TheTrueAccount_2",
+					"may i pls get gbs of chart i'll definitely not ruin it",
+					"420",
+					"VDaB news: Community is still a dumpster",
+					"i exist, totally i do.",
+					"shame that nobody knows i exist",
+					"Go go gadget documents.",
+					"I will come in and ruin- i mean make your day!",
+					f"I have a total of {len(self.TASKS)} tasks to do, be right back!"
+				]),
+				emoji=nextcord.PartialEmoji.from_str("<:trol:1266497383110414356>")
+			),
+			status=nextcord.Status.idle
 		)
 
 	@tasks.loop(minutes=30)
@@ -82,7 +85,7 @@ class AccountBot(commands.Bot):
 			return
 
 		self.autoSave.cancel()
-		await self.autoSave(True)
+		await self.autoSave()
 
 		with open("data/commit.txt", "w") as f:
 			f.write(commit)
@@ -138,21 +141,15 @@ class AccountBot(commands.Bot):
 		if os.path.exists("data/commit.txt"):
 			with open("data/commit.txt", "r") as f:
 				self.CUR_COMMIT = f.read()
-
 		os.makedirs("data/ids", exist_ok=True)
+
+		self.autoSave.start()
+		self.taskLoop.start()
+		if os.getenv("D_TESTING") != "1":
+			self.autoUpdate.start()
 
 	async def on_ready(self):
 		print(f"Logged on as {self.user}!")
-		self.LAST_ONLINE = time.time()
-
-		try:
-			self.autoSave.start()
-			self.autoSet.start()
-			self.taskLoop.start()
-			if os.getenv("D_TESTING") != "1":
-				self.autoUpdate.start()
-		except RuntimeError:
-			pass
 
 		guild = self.get_guild(consts.GUILD_ID)
 		if guild:
