@@ -1,6 +1,7 @@
 import os
 import json
 import time
+import aiohttp
 import nextcord
 import traceback
 from functools import wraps
@@ -83,39 +84,45 @@ class Task:
 		)
 
 class FNFConverter(Task):
-	def __init__(self, bot:"BotCommands", i, chartFormat:str):
+	def __init__(self, bot:"BotCommands", i, chartFormat:str, pathToURL:str):
 		super().__init__(bot, i)
 		typeof, self.extension = os.path.splitext(chartFormat)
-		self.filename = f"data/ids/{self.id}.txt"
+		self.url = pathToURL
 		self.func:Callable[[float, int, float], str] = {
 			"Add Yourself Singing": lambda time, direction, length: f"{{{round(time / 1000, 7)}}}: {{{direction}}}: {{{length}}}"
 		}[typeof]
 
 	async def start(self) -> tuple[bool, str]:
-		try:
-			with open(self.filename, "r") as f:
-				serialized = json.load(f)
-			os.remove(self.filename)
+		string = bytearray()
+		async with aiohttp.ClientSession() as session:
+			async with session.get(self.url) as resp:
+				resp.raise_for_status()
 
-			if "song" not in serialized:
-				raise ValueError("Not a Psych Engine Format.")
-			elif isinstance(serialized["song"], dict):
-				serialized = serialized["song"]
+				size = int(resp.headers.get("content-length", 0x80000000))
+				if size > 0x7FFFFFFF:
+					raise ValueError(f"Sorry! I can't handle large JSONs (your JSON size is {size} while i only accept 2GB!).")
 
-			out:list[tuple[float, int, float]] = []
-			for section in serialized["notes"]:
-				hit = int(section["mustHitSection"]) * 4
-				for notes in section["sectionNotes"]:
-					out.append((notes[0], (notes[1] + hit) % 8, notes[2]))
-			out.sort(key=lambda x: x[0])
+				async for line in resp.content.iter_chunked(8192):
+					string.extend(line)
+		serialized = json.loads(string)
+		del string
 
-			with open("convert.tmp", "w") as f:
-				for time, direction, length in out:
-					f.write(f"{self.func(time, direction, length)}\n")
-			os.replace("convert.tmp", f"../Site/start/rBot/{self.id}.{self.extension}")
+		if "song" not in serialized:
+			raise ValueError("Not a Psych Engine Format.")
+		elif isinstance(serialized["song"], dict):
+			serialized = serialized["song"]
 
-			del out
-			return True, f"https://n2xd.dedyn.io/rBot/{self.id}.{self.extension}"
-		except Exception as e:
-			os.remove(self.filename)
-			raise e
+		out:list[tuple[float, int, float]] = []
+		for section in serialized["notes"]:
+			hit = int(section["mustHitSection"]) * 4
+			for notes in section["sectionNotes"]:
+				out.append((notes[0], (notes[1] + hit) % 8, notes[2]))
+		out.sort(key=lambda x: x[0])
+
+		with open("convert.tmp", "w") as f:
+			for time, direction, length in out:
+				f.write(f"{self.func(time, direction, length)}\n")
+		os.replace("convert.tmp", f"../Site/start/rBot/{self.id}.{self.extension}")
+
+		del out
+		return True, f"https://n2xd.dedyn.io/rBot/{self.id}.{self.extension}"

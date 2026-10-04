@@ -190,22 +190,7 @@ class BotCommands(commands.Cog):
 			required=False
 		)
 	):
-		fileMode = file is not None
-		path = fileMode and file.url or url
+		path = file is not None and file.url or url
 		if not path:
 			return await i.response.send_message("File or URL not Provided and therefore cannot be done.", ephemeral=True)
-
-		task = tasks.FNFConverter(self, i.user, chartformat)
-		async with aiohttp.ClientSession() as session:
-			async with session.get(path) as resp:
-				resp.raise_for_status()
-
-				size = fileMode and file.size or int(resp.headers.get("content-length", 0x80000000))
-				if size > 0x7FFFFFFF:
-					return await i.response.send_message(f"Sorry! I can't handle large JSONs (your JSON size is {size} while i only accept 2GB!).", ephemeral=True)
-
-				with open(task.filename, "wb") as f:
-					async for line in resp.content.iter_chunked(8192):
-						f.write(line)
-
-		return task
+		return tasks.FNFConverter(self, i.user, chartformat, path)
