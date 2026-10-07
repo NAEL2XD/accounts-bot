@@ -52,11 +52,11 @@ class AccountBot(commands.Bot):
 			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
 		os.replace(tmpPath, dataPath)
 
-	@tasks.loop(minutes=5)
+	@tasks.loop(minutes=2)
 	async def tagline(self):
 		await self.change_presence(
 			activity=nextcord.Game(
-				name=random.choice([
+				random.choice([
 					"*not* Made by TheTrueAccount_2",
 					"may i pls get gbs of chart pls pls pls plspslsplspls",
 					"420",
@@ -68,8 +68,7 @@ class AccountBot(commands.Bot):
 					f"I have a total of {len(self.TASKS)} tasks to do, be right back!",
 					"don't use bandu, instead use me!" # lancey joke
 				])
-			),
-			status=nextcord.Status.idle
+			)
 		)
 
 	@tasks.loop(minutes=30)
