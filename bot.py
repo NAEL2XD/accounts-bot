@@ -51,21 +51,20 @@ class AccountBot(commands.Bot):
 		with open(tmpPath, "w") as f:
 			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
 		os.replace(tmpPath, dataPath)
-
 		await self.change_presence(
-			activity=nextcord.CustomActivity(
+			activity=nextcord.Game(
 				name=random.choice([
-					"Made by TheTrueAccount_2",
-					"may i pls get gbs of chart i'll definitely not ruin it",
+					"*not* Made by TheTrueAccount_2",
+					"may i pls get gbs of chart pls pls pls plspslsplspls",
 					"420",
 					"VDaB news: Community is still a dumpster",
 					"i exist, totally i do.",
 					"shame that nobody knows i exist",
 					"Go go gadget documents.",
 					"I will come in and ruin- i mean make your day!",
-					f"I have a total of {len(self.TASKS)} tasks to do, be right back!"
-				]),
-				emoji=nextcord.PartialEmoji.from_str("<:trol:1266497383110414356>")
+					f"I have a total of {len(self.TASKS)} tasks to do, be right back!",
+					"don't use bandu, instead use me!" # lancey joke
+				])
 			),
 			status=nextcord.Status.idle
 		)
@@ -156,6 +155,8 @@ class AccountBot(commands.Bot):
 			logs = guild.get_channel(1179012815479115786)
 			if logs and isinstance(logs, nextcord.TextChannel):
 				self.LOGS_CHANNEL = logs
+
+		await self.autoSave()
 
 	async def on_member_join(self, member:nextcord.Member):
 		age = time.time() - member.created_at.timestamp()
