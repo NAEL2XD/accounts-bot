@@ -60,7 +60,7 @@ class AccountBot(commands.Bot):
 					"*not* Made by TheTrueAccount_2",
 					"may i pls get gbs of chart pls pls pls plspslsplspls",
 					"420",
-					"VDaB news: Community is still a dumpster",
+					"VDaB news: Community is still a dumpster fire",
 					"i exist, totally i do.",
 					"shame that nobody knows i exist",
 					"Go go gadget documents.",
