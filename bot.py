@@ -51,6 +51,9 @@ class AccountBot(commands.Bot):
 		with open(tmpPath, "w") as f:
 			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
 		os.replace(tmpPath, dataPath)
+
+	@tasks.loop(minutes=5)
+	async def tagline(self):
 		await self.change_presence(
 			activity=nextcord.Game(
 				name=random.choice([
@@ -142,6 +145,7 @@ class AccountBot(commands.Bot):
 				self.CUR_COMMIT = f.read()
 		os.makedirs("data/ids", exist_ok=True)
 
+		self.tagline.start()
 		self.autoSave.start()
 		self.taskLoop.start()
 		if os.getenv("D_TESTING") != "1":
@@ -150,13 +154,14 @@ class AccountBot(commands.Bot):
 	async def on_ready(self):
 		print(f"Logged on as {self.user}!")
 
-		guild = self.get_guild(consts.GUILD_ID)
-		if guild:
-			logs = guild.get_channel(1179012815479115786)
-			if logs and isinstance(logs, nextcord.TextChannel):
-				self.LOGS_CHANNEL = logs
+		if (
+			(guild := self.get_guild(consts.GUILD_ID)) and
+			(logs := guild.get_channel(1179012815479115786)) and
+			isinstance(logs, nextcord.TextChannel)
+		):
+			self.LOGS_CHANNEL = logs
 
-		await self.autoSave()
+		await self.tagline()
 
 	async def on_member_join(self, member:nextcord.Member):
 		age = time.time() - member.created_at.timestamp()

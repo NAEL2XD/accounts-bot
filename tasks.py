@@ -1,3 +1,4 @@
+import gc
 import os
 import json
 import time
@@ -23,16 +24,12 @@ def mode():
 				return await i.response.send_message("You must have DMs enabled to use Tasks.", ephemeral=True)
 
 			try:
-				task = await func(self, i, *args, **kwargs)
+				task = await func(self, i.user, *args, **kwargs)
 				if isinstance(task, Task):
 					self.bot.TASKS.append(task)
 					await i.response.send_message(f"Task ID `{task.id}` has been added, you're on position {len(self.bot.TASKS)}.", ephemeral=True)
-			except Exception:
-				message = f"```\n{traceback.format_exc()}\n```"
-				if i.response.is_done():
-					await i.followup.send(message, ephemeral=True)
-				else:
-					await i.response.send_message(message, ephemeral=True)
+			except Exception as e:
+				await i.response.send_message(f"{e}\n\n```\n{traceback.format_exc()}\n```", ephemeral=True)
 
 		return wrapper
 	return decorator
@@ -57,31 +54,29 @@ class Task:
 		return True, ""
 
 	async def _startTask(self):
-		reason = ""
+		send = ""
 		try:
-			await self.target.send(f"Task ID `{self.id}` is started, this may take a while depending on how long it is.")
-
 			old = time.time()
 			success, url = await self.start()
-			if success:
-				await self.target.send(
-					"# Task is successfully done!\n\n"
-					f"Your Task ID `{self.id}` is finished without any errors, and has took `{round(time.time() - old, 4)}` seconds to finish.\n\n"
-					f"The file is available in this URL: {url}\n"
-					"-# Do note that this file CAN be deleted randomly in that server but its unlikely unless it is running out of space.\n"
-					"-# Why not *Discord?* Due to its limited size, it would probably cause errors, so that's why this URL is used."
-				)
-				return
-			reason = f"Task Failed due to this error: {url}"
-		except Exception:
-			reason = f"Exception Occurred!\n\n{traceback.format_exc()}"
+			if not success:
+				raise Exception(f"Task Failed due to this error: {url}")
 
-		await self.target.send(
-			"# Task has gotten errors!\n\n"
-			f"Your Task ID `{self.id}` has received errors and has stopped.\n\n"
-			f"```\n{reason}\n```\n\n"
-			"Please fix on what you're doing!"
-		)
+			send = (
+				"# Task is successfully done!\n\n"
+				f"Your Task ID `{self.id}` is finished without any errors, and has took `{round(time.time() - old, 4)}` seconds to finish.\n\n"
+				f"The file is available in this URL: {url}\n"
+				"-# Do note that this file CAN be deleted randomly in that server but its unlikely unless it is running out of space.\n"
+				"-# Why not *Discord?* Due to its limited size, it would probably cause errors, so that's why this URL is used."
+			)
+		except Exception as e:
+			send = (
+				"# Task has gotten errors!\n\n"
+				f"Your Task ID `{self.id}` has received errors and has stopped.\n\n"
+				f"*{e}*\n\n```\n{traceback.format_exc()}\n```\n\n"
+				"Please fix on what you're doing!"
+			)
+
+		await self.target.send(send)
 
 class FNFConverter(Task):
 	def __init__(self, bot:"BotCommands", i, chartFormat:str, pathToURL:str):
@@ -123,6 +118,7 @@ class FNFConverter(Task):
 			for time, direction, length in out:
 				f.write(f"{self.func(time, direction, length)}\n")
 		os.replace("convert.tmp", f"../Site/start/rBot/{self.id}.{self.extension}")
-
 		del out
+
+		gc.collect() # cleanup
 		return True, f"https://n2xd.dedyn.io/rBot/{self.id}.{self.extension}"
