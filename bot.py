@@ -52,7 +52,7 @@ class AccountBot(commands.Bot):
 			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(",", ":"))
 		os.replace(tmpPath, dataPath)
 
-	@tasks.loop(minutes=2)
+	@tasks.loop(minutes=5)
 	async def tagline(self):
 		print("called")
 		await self.change_presence(
