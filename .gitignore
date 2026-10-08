@@ -10,7 +10,6 @@ data/users.json
 data/users.json.tmp
 data/commit.txt
 data/id.txt
-data/ids*
 
 # misc
 out.txt

@@ -171,7 +171,7 @@ class BotCommands(commands.Cog):
 		await (message.unpin if message.pinned else message.pin)()
 		await i.response.send_message("Done.", ephemeral=True)
 
-	@nextcord.slash_command(name="tasks-fnf2any", description="Converts a Psych Engine JSON to another format.")
+	@nextcord.slash_command(name="tasks-fnf2any", description="Converts a Psych Engine JSON to another format.", integration_types=[0, 1], contexts=[0, 1, 2])
 	@tasks.mode()
 	async def tasks_fnf2any(
 		self,

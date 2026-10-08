@@ -49,11 +49,12 @@ class AccountBot(commands.Bot):
 		dataPath = "data/users.json"
 		tmpPath = f"{dataPath}.tmp"
 		with open(tmpPath, "w") as f:
-			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(',', ':'))
+			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(",", ":"))
 		os.replace(tmpPath, dataPath)
 
 	@tasks.loop(minutes=2)
 	async def tagline(self):
+		print("called")
 		await self.change_presence(
 			activity=nextcord.Game(
 				random.choice([
@@ -104,18 +105,20 @@ class AccountBot(commands.Bot):
 			pass
 
 	async def voteHandler(self, message:nextcord.Message):
-		if isinstance(message.channel, nextcord.TextChannel) and message.channel.category and \
-			isinstance(message.channel.category, nextcord.CategoryChannel) and message.channel.category.id not in consts.COMMUNITY_IDS:
-			return
+		if (
+			not isinstance(message.channel, nextcord.TextChannel) or
+			not isinstance(message.channel.category, nextcord.CategoryChannel) or
+			message.channel.category.id not in consts.COMMUNITY_IDS
+		): return
 
-		media:nextcord.Attachment|None = None
+		media:Optional[nextcord.Attachment] = None
 		if message.attachments:
 			media = message.attachments[0]
 		elif message.snapshots and message.snapshots[0].attachments:
 			media = message.snapshots[0].attachments[0]
 
 		if (media and media.content_type or "").split("/", 1)[0].lower() in ["image", "video", "audio"] and isinstance(message.author, nextcord.Member):
-			emojiDict = {str(emoji): emoji.count for emoji in message.reactions if str(emoji) in ['⬆️', '⬇️'] and emoji.me}
+			emojiDict = {str(emoji): emoji.count for emoji in message.reactions if str(emoji) in ["⬆️", "⬇️"] and emoji.me}
 			for emoji in ["⬆️", "⬇️"]: # KeyError goes bye.
 				if emoji not in emojiDict:
 					await message.add_reaction(emoji)
@@ -144,12 +147,6 @@ class AccountBot(commands.Bot):
 				self.CUR_COMMIT = f.read()
 		os.makedirs("data/ids", exist_ok=True)
 
-		self.tagline.start()
-		self.autoSave.start()
-		self.taskLoop.start()
-		if os.getenv("D_TESTING") != "1":
-			self.autoUpdate.start()
-
 	async def on_ready(self):
 		print(f"Logged on as {self.user}!")
 
@@ -157,10 +154,16 @@ class AccountBot(commands.Bot):
 			(guild := self.get_guild(consts.GUILD_ID)) and
 			(logs := guild.get_channel(1179012815479115786)) and
 			isinstance(logs, nextcord.TextChannel)
-		):
-			self.LOGS_CHANNEL = logs
+		): self.LOGS_CHANNEL = logs
 
-		await self.tagline()
+		try:
+			self.tagline.start()
+			self.autoSave.start()
+			self.taskLoop.start()
+			if os.getenv("D_TESTING") != "1":
+				self.autoUpdate.start()
+		except RuntimeError:
+			pass # i can't handle something that's running.
 
 	async def on_member_join(self, member:nextcord.Member):
 		age = time.time() - member.created_at.timestamp()
@@ -180,8 +183,7 @@ class AccountBot(commands.Bot):
 
 		for roleID in self.getDataFromMember(member).roleSave:
 			try:
-				role = member.guild.get_role(roleID)
-				if role:
+				if (role := member.guild.get_role(roleID)):
 					await member.add_roles(role)
 			except:
 				pass
@@ -190,13 +192,8 @@ class AccountBot(commands.Bot):
 		self.getDataFromMember(member).roleSave = [role.id for role in member.roles]
 
 	async def on_raw_reaction_add(self, m:nextcord.RawReactionActionEvent):
-		cID = self.get_channel(m.channel_id)
-		if not cID or not isinstance(cID, nextcord.TextChannel) or cID.category_id not in consts.COMMUNITY_IDS:
-			return
-
-		msg = await cID.fetch_message(m.message_id)
-		if msg: # CCC
-			await self.voteHandler(msg)
+		if (cID := self.get_channel(m.channel_id)) and isinstance(cID, nextcord.TextChannel):
+			await self.voteHandler(await cID.fetch_message(m.message_id))
 
 	async def on_message(self, message:nextcord.Message):
 		isSelf = message.author == self.user
@@ -210,30 +207,30 @@ class AccountBot(commands.Bot):
 
 		# i was bored ok?
 		if random.random() >= 0.999 and isinstance(message.author, nextcord.Member):
-			await achievements.unlock(self, message.author, "You did it!", "your did it, you gain achievement")
+			await achievements.unlock(self, message.author, "You did it!", "your did it, you're gain achievement")
 
-	#
 	# Error Handling
-	#
 	async def handleErr(self, exception:str, send:str):
 		with open("data/exception.txt", "w", encoding="utf-8") as f:
 			f.write(exception)
 
-		user = self.get_user(786639413282209802)
-		if user:
+		if (user := self.get_user(786639413282209802)):
 			await user.send(send, file=nextcord.File("data/exception.txt", "exception.txt"))
-
-		os.remove("data/exception.txt")
+			os.remove("data/exception.txt")
 
 	async def on_error(self, error):
 		await self.handleErr(traceback.format_exc(), f"# New Exception Occurred! - Reason: `{error}`")
 
 	async def on_application_command_error(self, interaction:nextcord.Interaction, exception:nextcord.ApplicationError):
+		error = str(interaction.application_command)
+		if interaction.application_command:
+			error = interaction.application_command.error_name
+
 		await self.handleErr(
 			"\n".join(traceback.format_exception(type(exception), exception, exception.__traceback__)),
 			"# New Exception Occurred!\n"
 			f"- Reason: `{exception}`\n"
-			f"- Interaction: `{interaction.application_command}`"
+			f"- Interaction: `{error}`"
 		)
 
 if __name__ == "__main__":

@@ -30,7 +30,6 @@ def mode():
 					await i.response.send_message(f"Task ID `{task.id}` has been added, you're on position {len(self.bot.TASKS)}.", ephemeral=True)
 			except Exception as e:
 				await i.response.send_message(f"{e}\n\n```\n{traceback.format_exc()}\n```", ephemeral=True)
-
 		return wrapper
 	return decorator
 
