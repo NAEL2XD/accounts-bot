@@ -56,7 +56,7 @@ class AccountBot(commands.Bot):
 	async def tagline(self):
 		print("called")
 		await self.change_presence(
-			activity=nextcord.Game(
+			activity=nextcord.CustomActivity(
 				random.choice([
 					"*not* Made by TheTrueAccount_2",
 					"may i pls get gbs of chart pls pls pls plspslsplspls",
@@ -68,7 +68,8 @@ class AccountBot(commands.Bot):
 					"I will come in and ruin- i mean make your day!",
 					f"I have a total of {len(self.TASKS)} tasks to do, be right back!",
 					"don't use bandu, instead use me!" # lancey joke
-				])
+				]),
+				emoji=nextcord.PartialEmoji.from_str("trol:1266497383110414356")
 			)
 		)
 
