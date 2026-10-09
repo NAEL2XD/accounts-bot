@@ -44,14 +44,7 @@ class AccountBot(commands.Bot):
 			self.USER_DATA[member.id] = UserData()
 		return self.USER_DATA[member.id]
 
-	@tasks.loop(minutes=10)
-	async def autoSave(self):
-		dataPath = "data/users.json"
-		tmpPath = f"{dataPath}.tmp"
-		with open(tmpPath, "w") as f:
-			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(",", ":"))
-		os.replace(tmpPath, dataPath)
-
+	async def presence(self):
 		await self.change_presence(
 			activity=nextcord.CustomActivity(
 				random.choice([
@@ -70,6 +63,15 @@ class AccountBot(commands.Bot):
 				emoji=nextcord.PartialEmoji.from_str("trol:1266497383110414356")
 			)
 		)
+
+	@tasks.loop(minutes=10)
+	async def autoSave(self):
+		dataPath = "data/users.json"
+		tmpPath = f"{dataPath}.tmp"
+		with open(tmpPath, "w") as f:
+			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(",", ":"))
+		os.replace(tmpPath, dataPath)
+		await self.presence()
 
 	@tasks.loop(minutes=30)
 	async def autoUpdate(self):
@@ -162,6 +164,8 @@ class AccountBot(commands.Bot):
 				self.autoUpdate.start()
 		except RuntimeError:
 			pass # i can't handle something that's running.
+
+		await self.presence()
 
 	async def on_member_join(self, member:nextcord.Member):
 		age = time.time() - member.created_at.timestamp()
