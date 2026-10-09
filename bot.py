@@ -52,9 +52,6 @@ class AccountBot(commands.Bot):
 			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(",", ":"))
 		os.replace(tmpPath, dataPath)
 
-	@tasks.loop(minutes=5)
-	async def tagline(self):
-		print("called")
 		await self.change_presence(
 			activity=nextcord.CustomActivity(
 				random.choice([
@@ -67,7 +64,8 @@ class AccountBot(commands.Bot):
 					"Go go gadget documents.",
 					"I will come in and ruin- i mean make your day!",
 					f"I have a total of {len(self.TASKS)} tasks to do, be right back!",
-					"don't use bandu, instead use me!" # lancey joke
+					"don't use bandu, instead use me!", # lancey joke
+					"psst, message 'rbot is epic' exactly for an achievement!"
 				]),
 				emoji=nextcord.PartialEmoji.from_str("trol:1266497383110414356")
 			)
@@ -158,7 +156,6 @@ class AccountBot(commands.Bot):
 		): self.LOGS_CHANNEL = logs
 
 		try:
-			self.tagline.start()
 			self.autoSave.start()
 			self.taskLoop.start()
 			if os.getenv("D_TESTING") != "1":
@@ -207,8 +204,15 @@ class AccountBot(commands.Bot):
 		await self.voteHandler(message)
 
 		# i was bored ok?
-		if random.random() >= 0.999 and isinstance(message.author, nextcord.Member):
-			await achievements.unlock(self, message.author, "You did it!", "your did it, you're gain achievement")
+		if isinstance(message.author, nextcord.Member):
+			if random.random() >= 0.999:
+				await achievements.unlock(self, message.author, "You did it!", "your did it, you're gain achievement")
+			if message.content == "rbot is epic": # oh pls stop cheating
+				await achievements.unlock(
+					self, message.author, "Status Witch Hunt",
+					"The almighty wizard of rBot has given you the magic of this wicked role within that passage. "
+					"Therefore the passage of this mighty achievement is awarded solely for you, ye *wizard!*"
+				)
 
 	# Error Handling
 	async def handleErr(self, exception:str, send:str):
