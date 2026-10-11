@@ -25,11 +25,9 @@ ROLES = {
 async def unlock(self:"AccountBot", user:nextcord.Member, achievement:str, customString:str = ""):
 	g = user.guild
 	if (
-		g is not None and
 		g.id == consts.GUILD_ID and
 		achievement in ROLES and
-		(rID := ROLES[achievement].roleID) and
-		(role := g.get_role(rID)) and
+		(role := g.get_role(ROLES[achievement].roleID)) and
 		role not in user.roles # forgot
 	): 	
 		await user.add_roles(role)
