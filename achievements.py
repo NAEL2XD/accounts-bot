@@ -27,7 +27,8 @@ async def unlock(self:"AccountBot", user:nextcord.Member, achievement:str, custo
 		(g := self.get_guild(consts.GUILD_ID)) and
 		achievement in ROLES and
 		(rID := ROLES[achievement].roleID) and
-		(role := g.get_role(rID))
+		(role := g.get_role(rID)) and
+		user.get_role(rID) is None # forgot
 	): 	
 		await user.add_roles(role)
 		await self.tryDM(
