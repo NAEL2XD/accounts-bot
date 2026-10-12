@@ -127,16 +127,14 @@ class AccountBot(commands.Bot):
 
 			if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1:
 				await achievements.unlock(
-					self, message.author, "Everyone Loves It", 
+					self, message.author, 1473009251399110687, # Everyone Loves It
 					"# Congratulations!!\n\n"
 					f"Your [post]({message.jump_url}) there was a massive success!\n\n"
 					"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
 					"Check your profile, it should be there now, and have fun with your new role!"
 				)
 
-	#
 	# CURRENT CONFIG
-	#
 	def __init__(self, *, intents:nextcord.Intents):
 		super().__init__(intents=intents)
 		if os.path.exists("data/users.json"):
@@ -210,10 +208,10 @@ class AccountBot(commands.Bot):
 		# i was bored ok?
 		if isinstance(message.author, nextcord.Member):
 			if random.random() >= 0.999:
-				await achievements.unlock(self, message.author, "You did it!", "your did it, you're gain achievement")
+				await achievements.unlock(self, message.author, 1534330974807130172, "your did it, you're gain achievement") # You did it!
 			if message.content == "rbot is epic": # oh pls stop cheating
 				await achievements.unlock(
-					self, message.author, "Status Witch Hunt",
+					self, message.author, 1558236812143755375, # Status Witch Hunt
 					"The almighty wizard of rBot has given you the magic of this wicked role within that passage. "
 					"Therefore the passage of this mighty achievement is awarded solely for you, ye *wizard!*"
 				)

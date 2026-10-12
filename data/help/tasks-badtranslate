@@ -1,0 +1,23 @@
+Translates your content into a Badly Translated content.
+
+This uses the Google Translate API to translate your content to hundreds of other languages, then back in english when it's the last cycle.
+
+**This is a Task Function, you will need to have DMs enabled for it to be available.**
+
+## Arguments:
+`/tasks-badtranslate content<String> cycle<ScrollInt<10-100>> = 10`
+- `content` *REQUIRED* - The content to bad translate, if it's empty or would do nothing for translation will return.
+- `cycle` - How many cycles it should do until finish. Default is 10, Ranges from 10 to 100.
+
+## Example Usage:
+```
+> /tasks-badtranslate "I like my string"
+*task received*
+*computing later*
+>> DM: Like string I
+
+> /tasks-badtranslate "Don't break my string!" 50
+*task received*
+*computing later*
+>> DM: *uncomprehensible wording*
+```

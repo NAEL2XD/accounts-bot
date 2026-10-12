@@ -2,10 +2,12 @@ import gc
 import os
 import json
 import time
+import random
 import aiohttp
 import nextcord
 import traceback
 from functools import wraps
+from urllib.parse import quote
 from typing import Callable, TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -24,7 +26,7 @@ def mode():
 				return await i.response.send_message("You must have DMs enabled to use Tasks.", ephemeral=True)
 
 			try:
-				task = await func(self, i.user, *args, **kwargs)
+				task = await func(self, i, *args, **kwargs)
 				if isinstance(task, Task):
 					self.bot.TASKS.append(task)
 					await i.response.send_message(f"Task ID `{task.id}` has been added, you're on position {len(self.bot.TASKS)}.", ephemeral=True)
@@ -54,18 +56,24 @@ class Task:
 
 	async def _startTask(self):
 		send = ""
+		file = []
 		try:
 			old = time.time()
-			success, url = await self.start()
+			success, output = await self.start()
 			if not success:
-				raise Exception(f"Task Failed due to this error: {url}")
+				raise Exception(f"Task Failed due to this error: {output}")
 
+			if len(output) > 1024:
+				with open(".tmp", "w") as f:
+					f.write(output)
+				file.append(nextcord.File(".tmp", "big_file.txt"))
+				output = "The output can be viewed by seeing big_file.txt"
+
+			minutes, seconds = divmod(time.time() - old, 60)
 			send = (
 				"# Task is successfully done!\n\n"
-				f"Your Task ID `{self.id}` is finished without any errors, and has took `{round(time.time() - old, 4)}` seconds to finish.\n\n"
-				f"The file is available in this URL: {url}\n"
-				"-# Do note that this file CAN be deleted randomly in that server but its unlikely unless it is running out of space.\n"
-				"-# Why not *Discord?* Due to its limited size, it would probably cause errors, so that's why this URL is used."
+				f"Your Task ID `{self.id}` is finished without any errors, and has took `{int(minutes)}:{seconds:06.3f}` seconds to finish.\n\n"
+				f"The outputted message:\n\n```\n{output}\n```\n\n"
 			)
 		except Exception as e:
 			send = (
@@ -75,7 +83,7 @@ class Task:
 				"Please fix on what you're doing!"
 			)
 
-		await self.target.send(send)
+		await self.target.send(send, files=file)
 
 class FNFConverter(Task):
 	def __init__(self, bot:"BotCommands", i, chartFormat:str, pathToURL:str):
@@ -121,3 +129,43 @@ class FNFConverter(Task):
 
 		gc.collect() # cleanup
 		return True, f"https://n2xd.dedyn.io/rBot/{self.id}.{self.extension}"
+
+class BadTranslate(Task):
+	def __init__(self, bot:"BotCommands", i, content:str, cycle:int):
+		super().__init__(bot, i)
+		self.content = content
+		self.cycle = cycle
+
+	async def start(self) -> tuple[bool, str]:
+		async with aiohttp.ClientSession(headers={
+			"Accept": "application/json",
+			"Accept-Encoding": "gzip, deflate, br, zstd",
+			"Accept-Language": "en-US,en;q=0.9",
+			"Priority": "u=0",
+			"Referer": "https://translate.google.com/",
+			"Sec-Fetch-Dest": "empty",
+			"Sec-Fetch-Mode": "cors",
+			"Sec-Fetch-Site": "same-origin",
+			"Sec-Gpc": "1",
+			"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
+			"X-Amzn-Trace-Id": "Root=1-6a1b4544-1194171b74103f097e63bc42"
+		}) as base:
+			langs = ["af","sq","am","ar","hy","az","eu","bn","bs","bg","ca","ceb","zh-CN","zh-TW","co","hr","cs","da","nl","en","eo","et","fi","fr","fy","gl","ka","de","el","gu","ht","ha","haw","iw","hi","hmn","hu","is","id","ga","ja","jw","kn","kk","km","ko","ku","lo","lv","lt","lb","mk","mg","ms","ml","mt","mi","mr","mn","ne","no","ny","ps","fa","pl","pt","pa","ro","ru","sm","gd","sr","st","sn","sd","si","sk","sl","so","es","sw","sv","tl","tg","ta","te","th","tr","uk","ur","uz","vi","cy","xh","yi","yo","zu"]
+
+			if len(self.content) < 2:
+				return True, f"There is nothing to translate!"
+
+			oldLang = "en"
+			for cycle in range(self.cycle):
+				randomLang = oldLang
+				while randomLang == oldLang:
+					randomLang = random.choice(langs)
+
+				if cycle == self.cycle - 1:
+					randomLang = "en"
+
+				async with base.get(f"https://translate.googleapis.com/translate_a/single?client=gtx&sl={oldLang}&tl={randomLang}&dt=t&q={quote(self.content)}") as resp:
+					resp.raise_for_status()
+					self.content = "".join([x[0] for x in (await resp.json())[0]])
+					oldLang = randomLang
+		return True, f"Output for Bad Translation:\n\n{self.content}"

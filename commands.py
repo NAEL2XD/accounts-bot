@@ -4,7 +4,6 @@ import heapq
 import tasks
 import consts
 import random
-import aiohttp
 import nextcord
 import achievements
 from functools import wraps
@@ -64,6 +63,9 @@ class BotCommands(commands.Cog):
 			required=False
 		)
 	):
+		if not i.user: # get out problems
+			return
+
 		if leaderboard:
 			self.bot.getDataFromMember(i.user).cmdTimestamp = 0
 
@@ -98,9 +100,9 @@ class BotCommands(commands.Cog):
 
 		await i.response.send_message(f"{user.mention} {sender} {':joy:' * increment}, user got bombed {target.bombed} times")
 		if target.bombed >= 5:
-			await achievements.unlock(self.bot, user, "Bomber Enthusiastic")
+			await achievements.unlock(self.bot, user, 1475909457270804653, "# EXPLODE!") # Bomber Enthusiastic
 		if increment >= 5 and isinstance(i.user, nextcord.Member):
-			await achievements.unlock(self.bot, i.user, "Well Donexplosion")
+			await achievements.unlock(self.bot, i.user, 1505569438618091520, "Your town is destroyed, what are you gonna do about it?") # Well Donexplosion
 
 	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.", guild_ids=[consts.GUILD_ID])
 	async def achievements(self, i:nextcord.Interaction):
@@ -109,12 +111,12 @@ class BotCommands(commands.Cog):
 
 		sender = "# ACHIEVEMENTS:\n"
 		members = i.guild.member_count or 1
-		for name, data in achievements.ROLES.items():
-			role = i.guild.get_role(data.roleID)
+		for roleID, description in achievements.ROLES.items():
+			role = i.guild.get_role(roleID)
 			if role:
 				totalWithRole = len(role.members)
 				sender += "`{}`: {}{}\n-# **{}** of the users have this role.\n\n".format(
-					name, data.description, " - ***You already have this role!***" if role in i.user.roles else "",
+					role.name, description, " - ***You already have this role!***" if role in i.user.roles else "",
 					f"{round((totalWithRole / members) * 100, 2)}% `{totalWithRole} / {members}`"
 				)
 
@@ -194,3 +196,22 @@ class BotCommands(commands.Cog):
 		if not path:
 			return await i.response.send_message("File or URL not Provided and therefore cannot be done.", ephemeral=True)
 		return tasks.FNFConverter(self, i.user, chartformat, path)
+
+	@nextcord.slash_command(name="tasks-badtranslate", description="Translates your text by a bunch of cycles from Google Translate. !! THIS IS SLOW !!", integration_types=[0, 1], contexts=[0, 1, 2])
+	@tasks.mode()
+	async def tasks_badtranslate(
+		self,
+		i:nextcord.Interaction,
+		content:str = nextcord.SlashOption(
+			description="The content to convert to Badly Translated text.", 
+			required=True
+		),
+		cycles:int = nextcord.SlashOption(
+			description="The amount to bad translate, default is 10", 
+			required=False,
+			default=10,
+			min_value=1,
+			max_value=150
+		)
+	):
+		return tasks.BadTranslate(self, i.user, content, cycles)
