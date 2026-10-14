@@ -36,7 +36,8 @@ class AccountBot(commands.Bot):
 	@tasks.loop(seconds=1)
 	async def taskLoop(self):
 		if self.TASKS:
-			await self.TASKS.pop()._startTask()
+			await self.TASKS[0].handler()
+			self.TASKS.pop()
 
 	# BOT UTILITIES
 	def getDataFromMember(self, member:Member) -> UserData:
@@ -158,7 +159,7 @@ class AccountBot(commands.Bot):
 		try:
 			self.autoSave.start()
 			self.taskLoop.start()
-			if os.getenv("D_TESTING") != "1":
+			if os.environ.get("D_TESTING") != "1":
 				self.autoUpdate.start()
 		except RuntimeError:
 			pass # i can't handle something that's running.

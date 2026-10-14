@@ -134,7 +134,7 @@ class BotCommands(commands.Cog):
 			title=f"*`Account's rBot`* (Commit {commit})",
 			description=
 				"Account's rBot is a custom bot programmed for Account's Folder Server. It provides utilities, help stuff, and much more.\n"
-				"[*Source Code*](https://github.com/NAEL2XD/accounts-bot) • [*Made by Nael2xd*](<https://discord.com/users/786639413282209802>)",
+				"[*Source Code*](https://github.com/NAEL2XD/accounts-bot) • [*Made by Nael2xd*](<https://nextcord.com/users/786639413282209802>)",
 		))
 
 	@nextcord.message_command("Warn AI Usage", guild_ids=[consts.GUILD_ID])
