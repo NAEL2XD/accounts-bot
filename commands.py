@@ -13,6 +13,13 @@ from nextcord.ext import commands
 if TYPE_CHECKING:
 	from bot import AccountBot
 
+class RawComponent(nextcord.Component):
+	__slots__ = ("data",)
+	def __init__(self, data: dict) -> None:
+		self.data = data
+	def to_dict(self) -> dict:
+		return self.data
+
 def cooldown(seconds:float):
 	def decorator(func):
 		@wraps(func)
@@ -109,18 +116,37 @@ class BotCommands(commands.Cog):
 		if not (i.guild and isinstance(i.user, nextcord.Member)):
 			return
 
-		sender = "# ACHIEVEMENTS:\n"
+		components = [{"type": 10, "content": "# ACHIEVEMENTS"}]
 		members = i.guild.member_count or 1
 		for roleID, description in achievements.ROLES.items():
 			role = i.guild.get_role(roleID)
 			if role:
-				totalWithRole = len(role.members)
-				sender += "`{}`: {}{}\n-# **{}** of the users have this role.\n\n".format(
-					role.name, description, " - ***You already have this role!***" if role in i.user.roles else "",
-					f"{round((totalWithRole / members) * 100, 2)}% `{totalWithRole} / {members}`"
-				)
+				components.append({"type": 14, "divider": True, "spacing": 1})
+				components.append({
+					"type": 9,
+					"components": [
+						{
+							"type": 10,
+							"content": f"**{role.name}**\n-# {description}"
+						}
+					],
+					"accessory": {
+						"type": 2,
+						"style": 4 - int(role not in i.user.roles),
+						"label": f"{len(role.members)} of {members} users have this role.",
+						"custom_id": f"ach_{roleID}" # unused
+					}
+				})
 
-		await i.response.send_message(sender)
+		await i.response.send_message(components=[
+			RawComponent(
+				{
+					"type": 17,
+					"accent_color": 0xED4245,
+					"components": components,
+				}
+			)
+		])
 
 	@nextcord.slash_command(description="Shows information about this custom bot.", integration_types=[0, 1], contexts=[0, 1, 2])
 	async def about(self, i:nextcord.Interaction):
