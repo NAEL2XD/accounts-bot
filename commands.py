@@ -132,7 +132,7 @@ class BotCommands(commands.Cog):
 					],
 					"accessory": {
 						"type": 2,
-						"style": 4 - int(role not in i.user.roles),
+						"style": 4 - int(role in i.user.roles),
 						"label": f"{len(role.members)} of {members} users have this role.",
 						"custom_id": f"ach_{roleID}" # unused
 					}
