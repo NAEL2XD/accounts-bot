@@ -12,23 +12,23 @@ import traceback
 import achievements
 from tasks import Task
 from commands import BotCommands
-from typing import Union, Optional
 from nextcord.ext import tasks, commands
 
-Member = Union[nextcord.User, nextcord.Member]
+Member = nextcord.User | nextcord.Member
 
 class UserData:
 	def __init__(self, data:dict = {}):
 		self.roleSave:list[int] = []
 		self.bombed:int = 0
 		self.cmdTimestamp:float = 0
+		self.recoverCodes:list[str] = []
 
 		for key, value in self.__dict__.items():
 			if key in data and isinstance(data[key], type(value)):
 				self.__dict__[key] = data[key]
 
 class AccountBot(commands.Bot):
-	LOGS_CHANNEL:Optional[nextcord.TextChannel] = None
+	LOGS_CHANNEL:nextcord.TextChannel | None = None
 	USER_DATA:dict[int, UserData] = {}
 	TASKS:list[Task] = []
 	CUR_COMMIT = ""
@@ -113,7 +113,7 @@ class AccountBot(commands.Bot):
 			message.channel.category.id not in consts.COMMUNITY_IDS
 		): return
 
-		media:Optional[nextcord.Attachment] = None
+		media:nextcord.Attachment | None = None
 		if message.attachments:
 			media = message.attachments[0]
 		elif message.snapshots and message.snapshots[0].attachments:
@@ -126,13 +126,22 @@ class AccountBot(commands.Bot):
 					await message.add_reaction(emoji)
 					emojiDict[emoji] = 1
 
-			if emojiDict["⬆️"] >= 10 and emojiDict["⬇️"] <= 1:
+			if emojiDict["⬇️"] > 1:
+				return
+			
+			if emojiDict["⬆️"] >= 10:
 				await achievements.unlock(
-					self, message.author, 1473009251399110687, # Everyone Loves It
+					message.author, 1473009251399110687, # Everyone Loves It
 					"# Congratulations!!\n\n"
 					f"Your [post]({message.jump_url}) there was a massive success!\n\n"
 					"Because your post didn't even get a single downvote, and has more than 10 upvotes, that means you now have gotten the `Everyone Loves It!!` role!\n\n"
 					"Check your profile, it should be there now, and have fun with your new role!"
+				)
+			if emojiDict["⬆️"] >= 25:
+				await achievements.unlock(
+					message.author, 1570122920380997713, # Everyone Loves It
+					f"omg i'm such a biggest biggest biggest fan of your [work]({message.jump_url}) that i wanna want you as my partner\n\n"
+					"please sign my totally made achievement signature and you'll be the famous world star!!!!!"
 				)
 
 	# CURRENT CONFIG
@@ -182,12 +191,14 @@ class AccountBot(commands.Bot):
 			)
 			return
 
-		for roleID in self.getDataFromMember(member).roleSave:
-			try:
-				if (role := member.guild.get_role(roleID)):
-					await member.add_roles(role)
-			except:
-				pass
+		if (guild := self.get_guild(consts.GUILD_ID)):
+			roles = [
+				role
+				for roleID in self.getDataFromMember(member).roleSave
+				if (role := guild.get_role(roleID)) is not None
+			]
+			if roles:
+				await member.add_roles(*roles)
 
 	async def on_member_remove(self, member:nextcord.Member):
 		self.getDataFromMember(member).roleSave = [role.id for role in member.roles]
@@ -209,10 +220,10 @@ class AccountBot(commands.Bot):
 		# i was bored ok?
 		if isinstance(message.author, nextcord.Member):
 			if random.random() >= 0.999:
-				await achievements.unlock(self, message.author, 1534330974807130172, "your did it, you're gain achievement") # You did it!
+				await achievements.unlock(message.author, 1534330974807130172, "your did it, you're gain achievement") # You did it!
 			if message.content == "rbot is epic": # oh pls stop cheating
 				await achievements.unlock(
-					self, message.author, 1558236812143755375, # Status Witch Hunt
+					message.author, 1558236812143755375, # Status Witch Hunt
 					"The almighty wizard of rBot has given you the magic of this wicked role within that passage. "
 					"Therefore the passage of this mighty achievement is awarded solely for you, ye *wizard!*"
 				)

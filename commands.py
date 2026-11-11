@@ -7,7 +7,7 @@ import random
 import nextcord
 import achievements
 from functools import wraps
-from typing import TYPE_CHECKING 
+from typing import TYPE_CHECKING, Any 
 from nextcord.ext import commands
 
 if TYPE_CHECKING:
@@ -107,18 +107,18 @@ class BotCommands(commands.Cog):
 
 		await i.response.send_message(f"{user.mention} {sender} {':joy:' * increment}, user got bombed {target.bombed} times")
 		if target.bombed >= 5:
-			await achievements.unlock(self.bot, user, 1475909457270804653, "# EXPLODE!") # Bomber Enthusiastic
+			await achievements.unlock(user, 1475909457270804653, "# EXPLODE!") # Bomber Enthusiastic
 		if increment >= 5 and isinstance(i.user, nextcord.Member):
-			await achievements.unlock(self.bot, i.user, 1505569438618091520, "Your town is destroyed, what are you gonna do about it?") # Well Donexplosion
+			await achievements.unlock(i.user, 1505569438618091520, "Your town is destroyed, what are you gonna do about it?") # Well Donexplosion
 
 	@nextcord.slash_command(description="Shows stats of all the achievements with details and such.", guild_ids=[consts.GUILD_ID])
 	async def achievements(self, i:nextcord.Interaction):
 		if not (i.guild and isinstance(i.user, nextcord.Member)):
 			return
 
-		components = [{"type": 10, "content": "# ACHIEVEMENTS"}]
+		components:list[dict[str, Any]] = [{"type": 10, "content": "# ACHIEVEMENTS"}]
 		members = i.guild.member_count or 1
-		for roleID, description in achievements.ROLES.items():
+		for roleID, md in achievements.ROLES.items():
 			role = i.guild.get_role(roleID)
 			if role:
 				components.append({"type": 14, "divider": True, "spacing": 1})
@@ -127,7 +127,7 @@ class BotCommands(commands.Cog):
 					"components": [
 						{
 							"type": 10,
-							"content": f"**{role.name}**\n-# {description}"
+							"content": f"**{role.name}**\n-# {md.description}"
 						}
 					],
 					"accessory": {
@@ -165,13 +165,12 @@ class BotCommands(commands.Cog):
 
 	@nextcord.message_command("Warn AI Usage", guild_ids=[consts.GUILD_ID])
 	async def warnAI(self, i:nextcord.Interaction, message:nextcord.Message):
-		user = i.user
-		if not (isinstance(user, nextcord.Member) and self.bot.LOGS_CHANNEL):
+		if not (isinstance(i.user, nextcord.Member) and self.bot.LOGS_CHANNEL):
 			return
 
 		await self.bot.LOGS_CHANNEL.send(
 			"## ⚠️ Potential Usage of AI Reported!\n"
-			f"**Reporter**: {user.mention}\n"
+			f"**Reporter**: {i.user.mention}\n"
 			f"**Message Link**: {message.jump_url}\n"
 			"-# <@&1483900217945231481> <@&1188212983940255824>"
 		)
@@ -237,7 +236,7 @@ class BotCommands(commands.Cog):
 			required=False,
 			default=10,
 			min_value=1,
-			max_value=150
+			max_value=100
 		)
 	):
 		return tasks.BadTranslate(self, i.user, content, cycles)
