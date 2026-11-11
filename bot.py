@@ -59,9 +59,9 @@ class AccountBot(commands.Bot):
 					"I will come in and ruin- i mean make your day!",
 					f"I have a total of {len(self.TASKS)} tasks to do, be right back!",
 					"don't use bandu, instead use me!", # lancey joke
-					"psst, message 'rbot is epic' exactly for an achievement!"
-				]),
-				emoji=nextcord.PartialEmoji.from_str("trol:1266497383110414356")
+					"psst, message 'rbot is epic' exactly for an achievement!",
+					"you are coolio"
+				])
 			)
 		)
 
@@ -128,7 +128,7 @@ class AccountBot(commands.Bot):
 
 			if emojiDict["⬇️"] > 1:
 				return
-			
+
 			if emojiDict["⬆️"] >= 10:
 				await achievements.unlock(
 					message.author, 1473009251399110687, # Everyone Loves It
@@ -139,7 +139,7 @@ class AccountBot(commands.Bot):
 				)
 			if emojiDict["⬆️"] >= 25:
 				await achievements.unlock(
-					message.author, 1570122920380997713, # Everyone Loves It
+					message.author, 1570122920380997713, # World Famous
 					f"omg i'm such a biggest biggest biggest fan of your [work]({message.jump_url}) that i wanna want you as my partner\n\n"
 					"please sign my totally made achievement signature and you'll be the famous world star!!!!!"
 				)

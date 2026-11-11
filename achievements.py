@@ -22,9 +22,9 @@ async def unlock(user:nextcord.Member, achievementID:int, customString:str = "")
 		(role := user.guild.get_role(achievementID)) and
 		role not in user.roles # forgot
 	): 	
-		from io import BytesIO
 		files:list[nextcord.File] = []
 		if ROLES[achievementID].hard:
+			from io import BytesIO
 			from PIL import Image, ImageDraw, ImageFont
 			b = BytesIO()
 			a = Image.open("asset/achievement.png")
@@ -32,7 +32,7 @@ async def unlock(user:nextcord.Member, achievementID:int, customString:str = "")
 			t = ImageFont.truetype("asset/m.ttf", 80)
 			_, _, w, _ = d.textbbox((0, 0), role.name, t)
 			d.text(((1280 - w) / 2, 310), role.name, "black", t)
-			a.save(b, format="PNG")
+			a.save(b, "PNG")
 			files.append(nextcord.File(b.getvalue(), "you good.png", spoiler=True))
 
 		try:
