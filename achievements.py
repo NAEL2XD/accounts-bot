@@ -17,7 +17,7 @@ ROLES = {
 
 async def unlock(user:nextcord.Member, achievementID:int, customString:str = ""):
 	if (
-		user.guild is not None and # this can be none
+		hasattr(user, "guild") and # this can be none
 		user.guild.id == consts.GUILD_ID and
 		achievementID in ROLES and
 		(role := user.guild.get_role(achievementID)) and
