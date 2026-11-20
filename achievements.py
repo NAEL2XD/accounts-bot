@@ -17,6 +17,7 @@ ROLES = {
 
 async def unlock(user:nextcord.Member, achievementID:int, customString:str = ""):
 	if (
+		user.guild is not None and # this can be none
 		user.guild.id == consts.GUILD_ID and
 		achievementID in ROLES and
 		(role := user.guild.get_role(achievementID)) and
@@ -33,7 +34,8 @@ async def unlock(user:nextcord.Member, achievementID:int, customString:str = "")
 			_, _, w, _ = d.textbbox((0, 0), role.name, t)
 			d.text(((1280 - w) / 2, 310), role.name, "black", t)
 			a.save(b, "PNG")
-			files.append(nextcord.File(b.getvalue(), "you good.png", spoiler=True))
+			b.seek(0)
+			files.append(nextcord.File(b, "you good.png", spoiler=True))
 
 		try:
 			await user.add_roles(role)
