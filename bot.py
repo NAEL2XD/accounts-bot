@@ -191,14 +191,12 @@ class AccountBot(commands.Bot):
 			)
 			return
 
-		if (guild := self.get_guild(consts.GUILD_ID)):
-			roles = [
-				role
-				for roleID in self.getDataFromMember(member).roleSave
-				if (role := guild.get_role(roleID)) is not None
-			]
-			if roles:
-				await member.add_roles(*roles)
+		for roleID in self.getDataFromMember(member).roleSave:
+			try:
+				if (role := member.guild.get_role(roleID)):
+					await member.add_roles(role)
+			except:
+				pass
 
 	async def on_member_remove(self, member:nextcord.Member):
 		self.getDataFromMember(member).roleSave = [role.id for role in member.roles]
