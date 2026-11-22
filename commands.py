@@ -90,7 +90,7 @@ class BotCommands(commands.Cog):
 			return
 
 		increment = 1
-		if addition is not None and i.user == 786639413282209802:
+		if addition is not None and i.user.id == 786639413282209802:
 			increment = addition
 		else:
 			while random.random() < 0.5:
