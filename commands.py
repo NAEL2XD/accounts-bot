@@ -68,6 +68,10 @@ class BotCommands(commands.Cog):
 		leaderboard:bool = nextcord.SlashOption(
 			description="Optional field if you wanna see the leaderboard", 
 			required=False
+		),
+		addition:int|None = nextcord.SlashOption(
+			description="OWNER OF BOT ONLY", 
+			required=False
 		)
 	):
 		if not i.user: # get out problems
@@ -86,8 +90,11 @@ class BotCommands(commands.Cog):
 			return
 
 		increment = 1
-		while random.random() < 0.5:
-			increment += 1
+		if addition is not None and i.user == 786639413282209802:
+			increment = addition
+		else:
+			while random.random() < 0.5:
+				increment += 1
 
 		funnies = {
 			1: "WOW! Mega BOMBED! user did explode not once but ***{} TIMES!***",
