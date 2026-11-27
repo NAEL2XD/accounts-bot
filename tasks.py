@@ -28,8 +28,8 @@ def mode():
 			try:
 				task = await func(self, i, *args, **kwargs)
 				if isinstance(task, Task):
-					self.bot.TASKS.append(task)
-					await i.response.send_message(f"Task ID `{task.id}` has been added, you're on position {len(self.bot.TASKS)}.", ephemeral=True)
+					self.bot.tasksQueue.append(task)
+					await i.response.send_message(f"Task ID `{task.id}` has been added, you're on position {len(self.bot.tasksQueue)}.", ephemeral=True)
 			except Exception as e:
 				await i.response.send_message(f"{e}\n\n```\n{traceback.format_exc()}\n```", ephemeral=True)
 		return wrapper
@@ -56,7 +56,7 @@ class Task:
 
 	async def handler(self):
 		send = ""
-		file = []
+		file:nextcord.File | None = None
 		try:
 			old = time.time()
 			success, output = await self.start()
@@ -66,7 +66,7 @@ class Task:
 			if len(output) > 1024:
 				with open(".tmp", "w") as f:
 					f.write(output)
-				file.append(nextcord.File(".tmp", "big_file.txt"))
+				file = nextcord.File(".tmp", "big_file.txt")
 				output = "The output can be viewed by seeing big_file.txt"
 
 			minutes, seconds = divmod(time.time() - old, 60)
@@ -78,7 +78,7 @@ class Task:
 		except Exception as e:
 			with open(".tmp", "w") as f:
 				f.write(traceback.format_exc())
-				file.append(nextcord.File(".tmp", "error.txt"))
+				file = nextcord.File(".tmp", "error.txt")
 
 			send = (
 				"# Task has gotten errors!\n\n"
@@ -87,7 +87,7 @@ class Task:
 				"Please fix on whatever you're doing!"
 			)
 
-		await self.target.send(send, files=file)
+		await self.target.send(send, file=file)
 		if os.path.exists(".tmp"):
 			os.remove(".tmp")
 
@@ -111,7 +111,7 @@ class FNFConverter(Task):
 
 				size = int(resp.headers.get("content-length", 0x80000000))
 				if size > 0x7FFFFFFF:
-					return False, f"Sorry! I can't handle large JSONs (your JSON size is {size} while i only accept 2GB!)."
+					return False, f"Sorry! I can't handle large JSONs (your JSON size is {size} while i only accept 2GiB!)."
 
 				async for line in resp.content.iter_chunked(8192):
 					string.extend(line)
@@ -162,7 +162,12 @@ class BadTranslate(Task):
 			"User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
 			"X-Amzn-Trace-Id": "Root=1-6a1b4544-1194171b74103f097e63bc42"
 		}) as base:
-			langs = ["af","sq","am","ar","hy","az","eu","bn","bs","bg","ca","ceb","zh-CN","zh-TW","co","hr","cs","da","nl","en","eo","et","fi","fr","fy","gl","ka","de","el","gu","ht","ha","haw","iw","hi","hmn","hu","is","id","ga","ja","jw","kn","kk","km","ko","ku","lo","lv","lt","lb","mk","mg","ms","ml","mt","mi","mr","mn","ne","no","ny","ps","fa","pl","pt","pa","ro","ru","sm","gd","sr","st","sn","sd","si","sk","sl","so","es","sw","sv","tl","tg","ta","te","th","tr","uk","ur","uz","vi","cy","xh","yi","yo","zu"]
+			langs = [
+				"af","sq","am","ar","hy","az","eu","bn","bs","bg","ca","ceb","zh-CN","zh-TW","co","hr","cs","da","nl","en","eo","et","fi","fr",
+				"fy","gl","ka","de","el","gu","ht","ha","haw","iw","hi","hmn","hu","is","id","ga","ja","jw","kn","kk","km","ko","ku","lo","lv",
+				"lt","lb","mk","mg","ms","ml","mt","mi","mr","mn","ne","no","ny","ps","fa","pl","pt","pa","ro","ru","sm","gd","sr","st",
+				"sn","sd","si","sk","sl","so","es","sw","sv","tl","tg","ta","te","th","tr","uk","ur","uz","vi","cy","xh","yi","yo","zu"
+			]
 
 			oldLang = "en"
 			for cycle in range(self.cycle):

@@ -28,22 +28,22 @@ class UserData:
 				self.__dict__[key] = data[key]
 
 class AccountBot(commands.Bot):
-	LOGS_CHANNEL:nextcord.TextChannel | None = None
-	USER_DATA:dict[int, UserData] = {}
-	TASKS:list[Task] = []
-	CUR_COMMIT = ""
+	logsChannel:nextcord.TextChannel | None = None
+	userDatabase:dict[int, UserData] = {}
+	tasksQueue:list[Task] = []
+	commit = ""
 
 	@tasks.loop(seconds=1)
 	async def taskLoop(self):
-		if self.TASKS:
-			await self.TASKS[0].handler()
-			self.TASKS.pop()
+		if self.tasksQueue:
+			await self.tasksQueue[0].handler()
+			self.tasksQueue.pop()
 
 	# BOT UTILITIES
 	def getDataFromMember(self, member:Member) -> UserData:
-		if member.id not in self.USER_DATA:
-			self.USER_DATA[member.id] = UserData()
-		return self.USER_DATA[member.id]
+		if member.id not in self.userDatabase:
+			self.userDatabase[member.id] = UserData()
+		return self.userDatabase[member.id]
 
 	async def presence(self):
 		await self.change_presence(
@@ -57,7 +57,7 @@ class AccountBot(commands.Bot):
 					"shame that nobody knows i exist",
 					"Go go gadget documents.",
 					"I will come in and ruin- i mean make your day!",
-					f"I have a total of {len(self.TASKS)} tasks to do, be right back!",
+					f"I have a total of {len(self.tasksQueue)} tasks to do, be right back!",
 					"don't use bandu, instead use me!", # lancey joke
 					"psst, message 'rbot is epic' exactly for an achievement!",
 					"you are coolio"
@@ -70,7 +70,7 @@ class AccountBot(commands.Bot):
 		dataPath = "data/users.json"
 		tmpPath = f"{dataPath}.tmp"
 		with open(tmpPath, "w") as f:
-			json.dump({num: value.__dict__ for num, value in self.USER_DATA.items()}, f, separators=(",", ":"))
+			json.dump({num: value.__dict__ for num, value in self.userDatabase.items()}, f, separators=(",", ":"))
 		os.replace(tmpPath, dataPath)
 		await self.presence()
 
@@ -85,7 +85,7 @@ class AccountBot(commands.Bot):
 					return
 				commit = str((await r.json())[0]["sha"]).strip().lower()
 
-		if commit in [self.CUR_COMMIT, ""]:
+		if commit in [self.commit, ""]:
 			return
 
 		self.autoSave.cancel()
@@ -145,15 +145,15 @@ class AccountBot(commands.Bot):
 				)
 
 	# CURRENT CONFIG
-	def __init__(self, *, intents:nextcord.Intents):
-		super().__init__(intents=intents)
+	def __init__(self):
+		super().__init__(intents=nextcord.Intents.all())
 		if os.path.exists("data/users.json"):
 			with open("data/users.json", "r") as f:
-				self.USER_DATA = {int(key): UserData(value) for key, value in dict(json.load(f)).items()}
+				self.userDatabase = {int(key): UserData(value) for key, value in dict(json.load(f)).items()}
 
 		if os.path.exists("data/commit.txt"):
 			with open("data/commit.txt", "r") as f:
-				self.CUR_COMMIT = f.read()
+				self.commit = f.read()
 		os.makedirs("data/ids", exist_ok=True)
 
 	async def on_ready(self):
@@ -163,7 +163,7 @@ class AccountBot(commands.Bot):
 			(guild := self.get_guild(consts.GUILD_ID)) and
 			(logs := guild.get_channel(1179012815479115786)) and
 			isinstance(logs, nextcord.TextChannel)
-		): self.LOGS_CHANNEL = logs
+		): self.logsChannel = logs
 
 		try:
 			self.autoSave.start()
@@ -208,8 +208,8 @@ class AccountBot(commands.Bot):
 	async def on_message(self, message:nextcord.Message):
 		isSelf = message.author == self.user
 		if isSelf or not isinstance(message.channel, nextcord.TextChannel):
-			if isinstance(message.channel, nextcord.DMChannel) and self.LOGS_CHANNEL and not isSelf: # not in account's folder but in a DM, so we send that to a channel
-				await (await message.forward(self.LOGS_CHANNEL)).reply(f"From {message.author.mention}")
+			if isinstance(message.channel, nextcord.DMChannel) and self.logsChannel and not isSelf: # not in account's folder but in a DM, so we send that to a channel
+				await (await message.forward(self.logsChannel)).reply(f"From {message.author.mention}")
 			return
 
 		# Community Channel Checks
@@ -251,6 +251,6 @@ class AccountBot(commands.Bot):
 		)
 
 if __name__ == "__main__":
-	self = AccountBot(intents=nextcord.Intents.all())
+	self = AccountBot()
 	self.add_cog(BotCommands(self))
 	self.run(sys.argv[1])

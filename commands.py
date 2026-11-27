@@ -81,8 +81,8 @@ class BotCommands(commands.Cog):
 			self.bot.getDataFromMember(i.user).cmdTimestamp = 0
 
 			sender = "## Bombed Rankings:\n"
-			for rank, (user_id, data) in enumerate(heapq.nlargest(10, self.bot.USER_DATA.items(), key=lambda x: x[1].bombed)):
-				user = self.bot.get_user(user_id)
+			for rank, (userID, data) in enumerate(heapq.nlargest(10, self.bot.userDatabase.items(), key=lambda x: x[1].bombed)):
+				user = self.bot.get_user(userID)
 				if user:
 					sender += f"{rank + 1}. **`{user.name}`** with *`{data.bombed}`* bomb count.\n"
 
@@ -172,10 +172,10 @@ class BotCommands(commands.Cog):
 
 	@nextcord.message_command("Warn AI Usage", guild_ids=[consts.GUILD_ID])
 	async def warnAI(self, i:nextcord.Interaction, message:nextcord.Message):
-		if not (isinstance(i.user, nextcord.Member) and self.bot.LOGS_CHANNEL):
+		if not (isinstance(i.user, nextcord.Member) and self.bot.logsChannel):
 			return
 
-		await self.bot.LOGS_CHANNEL.send(
+		await self.bot.logsChannel.send(
 			"## ⚠️ Potential Usage of AI Reported!\n"
 			f"**Reporter**: {i.user.mention}\n"
 			f"**Message Link**: {message.jump_url}\n"
